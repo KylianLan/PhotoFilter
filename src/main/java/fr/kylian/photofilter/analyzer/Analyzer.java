@@ -1,5 +1,10 @@
 package fr.kylian.photofilter.analyzer;
 
+import com.drew.imaging.ImageMetadataReader;
+import com.drew.imaging.ImageProcessingException;
+import com.drew.metadata.Metadata;
+import com.drew.metadata.exif.ExifSubIFDDirectory;
+
 import java.awt.Image;
 import java.io.IOException;
 import java.io.File;
@@ -13,9 +18,6 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
-/**
- *
- */
 public class Analyzer {
 
     private List<File> getFiles(final File folder) {
@@ -32,13 +34,21 @@ public class Analyzer {
         return files;
     }
 
-    private FileTime getFileCreationDate(final File file) throws IOException {
-        FileTime date;
+    public Date getFileCreationDate(File image) {
+        try {
+            Metadata metadata = ImageMetadataReader.readMetadata(image);
+            ExifSubIFDDirectory directory = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
+            if (directory != null) {
+                Date date = directory.getDate(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL);
+                if (date != null) {
+                    return date;
+                }
+            }
+        } catch (ImageProcessingException | IOException e) {
+            System.err.println("Error while reading metadata: " + e.getMessage());
+        }
 
-        BasicFileAttributes attributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
-        date = attributes.lastModifiedTime();
-
-        return date;
+        return null;
     }
 
     public void main() throws IOException {
