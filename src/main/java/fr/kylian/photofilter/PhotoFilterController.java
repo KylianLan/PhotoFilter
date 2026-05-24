@@ -3,7 +3,7 @@ package fr.kylian.photofilter;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 
-public class HelloController {
+public class PhotoFilterController {
     @FXML
     private Label welcomeText;
 

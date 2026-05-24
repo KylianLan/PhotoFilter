@@ -71,7 +71,7 @@
                         <!-- Default configuration for running with: mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>fr.kylian.photofilter/fr.kylian.photofilter.HelloApplication</mainClass>
+                            <mainClass>fr.kylian.photofilter/fr.kylian.photofilter.PhotoFilterApplication</mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
                             <jlinkImageName>app</jlinkImageName>
