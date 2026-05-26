@@ -3,5 +3,7 @@ package fr.kylian.photofilter.analyzer;
 public enum FilterMode {
     YEAR,
     MONTH,
-    DAY
+    DAY,
+    YEAR_ONLY,
+    MONTH_ONLY
 }
