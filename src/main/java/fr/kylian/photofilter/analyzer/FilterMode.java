@@ -5,5 +5,6 @@ public enum FilterMode {
     MONTH,
     DAY,
     YEAR_ONLY,
-    MONTH_ONLY
+    MONTH_ONLY,
+    MONTH_AND_YEAR
 }

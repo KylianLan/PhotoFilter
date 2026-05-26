@@ -81,6 +81,8 @@ public class Analyzer {
             case YEAR_ONLY -> (fileDate.getYear() == filter.getYear());
 
             case MONTH_ONLY -> (fileDate.getMonth() == filter.getMonth());
+
+            case MONTH_AND_YEAR -> (fileDate.getMonth() == filter.getMonth() && fileDate.getYear() == filter.getYear());
         };
     }
 
@@ -96,12 +98,14 @@ public class Analyzer {
     }
 
     public void main() throws IOException {
-        File folder = new File("C:\\Users\\kylia\\Pictures\\Photos from 2014");
+//        File folder = new File("C:\\Users\\kylia\\Pictures\\Photos from 2014");
+        File folder = new File("/home/kylian/Pictures/images");
         List<File> files = getFiles(folder);
         for (File f : files) {
-            System.out.println(f.getName() + " " + getFileCreationDate(f).getDate());
+            System.out.println(f.getName() + " " + getFileCreationDate(f));
         }
-        putInFolder(files, folder + "/Test", new Date(2014, Calendar.JUNE,2), FilterMode.MONTH_ONLY);
+//        putInFolder(files, folder + "/Test", new Date(2014, Calendar.JUNE,2), FilterMode.MONTH_ONLY);
+        putInFolder(files, folder + "/Test", new Date(2026, Calendar.FEBRUARY,5), FilterMode.MONTH_AND_YEAR);
     }
 
 }

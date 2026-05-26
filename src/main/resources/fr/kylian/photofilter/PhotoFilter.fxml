@@ -4,10 +4,13 @@
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
 
-
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/25.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fr.kylian.photofilter.PhotoFilterController">
    <top>
       <MenuBar BorderPane.alignment="CENTER">
         <menus>
@@ -26,6 +29,26 @@
       </MenuBar>
    </top>
    <center>
-      <Button fx:id="charger" mnemonicParsing="false" text="Charger un dossier" BorderPane.alignment="CENTER" />
+      <GridPane alignment="CENTER" BorderPane.alignment="CENTER">
+        <columnConstraints>
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+        </rowConstraints>
+         <children>
+            <Button fx:id="folderSelect" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#selectFolder" prefHeight="24.0" prefWidth="583.0" text="Select Folder" GridPane.rowIndex="1" />
+            <Button fx:id="dateSelect" mnemonicParsing="false" onAction="#selectDate" prefHeight="24.0" prefWidth="416.0" text="Select Date" GridPane.columnIndex="4" GridPane.rowIndex="1" />
+            <Button fx:id="start" mnemonicParsing="false" prefHeight="24.0" prefWidth="245.0" text="Start" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+            <TextArea fx:id="selectedFolder" editable="false" focusTraversable="false" prefHeight="124.0" prefWidth="239.0" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <TextArea fx:id="selectedDates" editable="false" focusTraversable="false" layoutX="210.0" layoutY="135.0" prefHeight="124.0" prefWidth="290.0" wrapText="true" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+         </children>
+      </GridPane>
    </center>
 </BorderPane>
