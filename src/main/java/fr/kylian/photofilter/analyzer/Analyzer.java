@@ -9,12 +9,26 @@ import java.io.IOException;
 import java.io.File;
 
 import java.nio.file.DirectoryStream;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public class Analyzer {
+
+    private static final List<String> IMAGE_EXTENSIONS = Arrays.asList(
+            ".jpg", ".jpeg", ".png", ".heic", ".heif", ".webp"
+    );
+
+    public boolean isImageFile(File file) {
+        if (file.isDirectory() || file.isHidden()) {
+            return false;
+        }
+
+        String name = file.getName().toLowerCase();
+        for (String ext : IMAGE_EXTENSIONS) {
+            if (name.endsWith(ext))
+                return true;
+        }
+        return false;
+    }
 
     private List<File> getFiles(final File folder) {
         List<File> files = new ArrayList<>();
@@ -22,7 +36,7 @@ public class Analyzer {
         for (final File fileEntry : folder.listFiles()) {
             if (fileEntry.isDirectory()) {
                 files.addAll(getFiles(fileEntry));
-            } else {
+            } else if (isImageFile(fileEntry)) {
                 files.add(fileEntry);
             }
         }
@@ -82,13 +96,12 @@ public class Analyzer {
     }
 
     public void main() throws IOException {
-        File folder = new File("/home/kylian/Pictures/images");
+        File folder = new File("C:\\Users\\kylia\\Pictures\\Photos from 2014");
         List<File> files = getFiles(folder);
         for (File f : files) {
             System.out.println(f.getName() + " " + getFileCreationDate(f).getDate());
-            compareDates(getFileCreationDate(f), new Date(2024, Calendar.JANUARY,27), FilterMode.MONTH);
         }
-        putInFolder(files, folder + "/test", new Date(2024, Calendar.JANUARY,2), FilterMode.YEAR);
+        putInFolder(files, folder + "/Test", new Date(2014, Calendar.JUNE,2), FilterMode.MONTH_ONLY);
     }
 
 }
