@@ -46,12 +46,23 @@ public class Analyzer {
         return null;
     }
 
+    /**
+     * Compares two dates
+     * Returns 0 if the dates are the same, less than 0 if d1 is before d2, or more than 0 if d1 is after d2.
+     */
+    public int compareDates(Date d1, Date d2) {
+        
+    }
+
     public void putInFolder(List<File> files, String folderName, Date filter) throws IOException {
-        if (!files.contains(new File(folderName))) {
-            new File(folderName).mkdir();
+        File destFolder = new File(folderName);
+        if (!files.contains(destFolder)) {
+            destFolder.mkdir();
         }
         for (File f : files) {
-
+            if (getFileCreationDate(f).compareTo(filter) == 0) {
+                f.renameTo(new File(destFolder.getAbsolutePath() + "/" + f.getName()));
+            }
         }
     }
 
@@ -61,8 +72,7 @@ public class Analyzer {
         for (File f : files) {
             System.out.println(f.getName() + " " + getFileCreationDate(f));
         }
-        putInFolder(files, folder + "/test", new Date(2016, Calendar.AUGUST,12));
-        System.out.println(folder + "/test");
+        putInFolder(files, folder + "/test", new Date(2024, Calendar.JANUARY,27));
     }
 
 }
