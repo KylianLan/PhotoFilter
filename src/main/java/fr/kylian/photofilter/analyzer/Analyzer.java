@@ -8,26 +8,43 @@ import com.drew.metadata.exif.ExifSubIFDDirectory;
 import java.io.IOException;
 import java.io.File;
 
-import java.nio.file.DirectoryStream;
 import java.util.*;
 
 public class Analyzer {
 
-    private static final List<String> IMAGE_EXTENSIONS = Arrays.asList(
-            ".jpg", ".jpeg", ".png", ".heic", ".heif", ".webp"
-    );
+    private static final Set<String> IMAGE_EXTENSIONS = new HashSet<String>(Arrays.asList(
+            ".jpg", ".jpeg", ".png", ".heic", ".heif", ".webp", ".avif"
+    ));
+    private static final Set<String> VIDEO_EXTENSIONS = new HashSet<String>(Arrays.asList(
+            ".mp4", ".mkv", ".mov"
+    ));
 
-    public boolean isImageFile(File file) {
-        if (file.isDirectory() || file.isHidden()) {
+    public boolean isImage(File file) {
+        if (file.isDirectory() || file.isHidden())  // Verifies if the file is a folder or hidden, ignores it if so
             return false;
-        }
 
         String name = file.getName().toLowerCase();
-        for (String ext : IMAGE_EXTENSIONS) {
-            if (name.endsWith(ext))
-                return true;
-        }
-        return false;
+        int dotIndex = name.lastIndexOf(".");
+
+        if (dotIndex <= 0) // Verifies if there is a dot in the file's name in order to check if the file has an extension
+            return false;
+
+        String ext = name.substring(dotIndex).toLowerCase();
+        return IMAGE_EXTENSIONS.contains(ext); // Only returns true if the file is a supported image
+    }
+
+    public boolean isVideo(File file) {
+        if (file.isDirectory() || file.isHidden())  // Verifies if the file is a folder or hidden, ignores it if so
+            return false;
+
+        String name = file.getName().toLowerCase();
+        int dotIndex = name.lastIndexOf(".");
+
+        if (dotIndex <= 0) // Verifies if there is a dot in the file's name in order to check if the file has an extension
+            return false;
+
+        String ext = name.substring(dotIndex).toLowerCase();
+        return VIDEO_EXTENSIONS.contains(ext); // Only returns true if the file is a supported video
     }
 
     private List<File> getFiles(final File folder) {
@@ -36,7 +53,7 @@ public class Analyzer {
         for (final File fileEntry : folder.listFiles()) {
             if (fileEntry.isDirectory()) {
                 files.addAll(getFiles(fileEntry));
-            } else if (isImageFile(fileEntry)) {
+            } else if (isImage(fileEntry) || isVideo(fileEntry)) {
                 files.add(fileEntry);
             }
         }
@@ -45,6 +62,8 @@ public class Analyzer {
     }
 
     public Date getFileCreationDate(File image) {
+        if (isVideo(image))
+            return new Date(-1); // If the given file is a video, returned date should be -1
         try {
             Metadata metadata = ImageMetadataReader.readMetadata(image);
             ExifSubIFDDirectory directory = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
@@ -58,15 +77,17 @@ public class Analyzer {
             System.err.println("Error while reading metadata: " + e.getMessage());
         }
 
-        return null;
+        return null; // null if Original Date Time does not exist
     }
 
     /**
      * Compares two dates and returns true if the two given dates are the same depending on the filtering mode
-     * filter date should be human-readable
-     * fileDate should be a file's date
+     * @param fileDate should be a file's date
+     * @param filter should be a human-readable date
+     * @param mode desired filtering mode
+     * @return true if fileDate matches filter based on the mode
      */
-    public boolean compareDates(Date fileDate, Date filter, FilterMode mode) {
+    private boolean compareDates(Date fileDate, Date filter, FilterMode mode) {
         filter = new Date(filter.getYear() - 1900, filter.getMonth(), filter.getDate());
         return switch (mode) {
             case DAY -> (fileDate.getDate() == filter.getDate());
@@ -98,14 +119,15 @@ public class Analyzer {
     }
 
     public void main() throws IOException {
+        // Testing purposes only
 //        File folder = new File("C:\\Users\\kylia\\Pictures\\Photos from 2014");
         File folder = new File("/home/kylian/Pictures/images");
         List<File> files = getFiles(folder);
         for (File f : files) {
             System.out.println(f.getName() + " " + getFileCreationDate(f));
         }
-//        putInFolder(files, folder + "/Test", new Date(2014, Calendar.JUNE,2), FilterMode.MONTH_ONLY);
-        putInFolder(files, folder + "/Test", new Date(2026, Calendar.FEBRUARY,5), FilterMode.MONTH_AND_YEAR);
+//        putInFolder(files, folder + "/Test", new Date(2014, Calendar.JUNE,2), FilterMode.MONTH_ONLY); // Windows
+//        putInFolder(files, folder + "/Test", new Date(2026, Calendar.FEBRUARY,5), FilterMode.MONTH_AND_YEAR); // Linux
     }
 
 }
