@@ -10,6 +10,9 @@ import java.io.File;
 
 import java.util.*;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class Analyzer {
 
     private static final Set<String> IMAGE_EXTENSIONS = new HashSet<String>(Arrays.asList(
@@ -63,7 +66,7 @@ public class Analyzer {
 
     public Date getFileCreationDate(File image) {
         if (isVideo(image))
-            return new Date(-1); // If the given file is a video, returned date should be -1
+            return readJsonMetadata(image); // If the given file is a video, automatically read json file
         try {
             Metadata metadata = ImageMetadataReader.readMetadata(image);
             ExifSubIFDDirectory directory = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
@@ -77,7 +80,38 @@ public class Analyzer {
             System.err.println("Error while reading metadata: " + e.getMessage());
         }
 
-        return null; // null if Original Date Time does not exist
+        return readJsonMetadata(image); // null if Original Date Time does not exist
+    }
+
+    private Date readJsonMetadata(File image) {
+        File parent = image.getParentFile();
+        if (parent == null || !parent.isDirectory()) {
+            return null;
+        }
+
+        String fileName = image.getName();
+        File[] matchingFiles = parent.listFiles((dir, name) -> name.startsWith(fileName) && name.endsWith(".json"));
+
+        if (matchingFiles == null || matchingFiles.length == 0) {
+            return null;
+        }
+
+        File jsonFile = matchingFiles[0]; // Take the first match
+
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode root = objectMapper.readTree(jsonFile);
+
+            JsonNode timestampNode = root.path("photoTakenTime").path("timestamp");
+            if (!timestampNode.isMissingNode()) {
+                long seconds = Long.parseLong(timestampNode.asText());
+                return new Date(seconds * 1000);
+            }
+        } catch (Exception e) {
+            System.err.println("Error while fetching metadata from JSON file for " + image.getAbsolutePath());
+        }
+
+        return null;
     }
 
     /**
