@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+
+<HBox maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="207.0" prefWidth="512.0" xmlns="http://javafx.com/javafx/25.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" HBox.hgrow="SOMETIMES">
+         <children>
+            <Label text="Day" />
+            <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
+               <children>
+                  <VBox alignment="CENTER" prefHeight="200.0" prefWidth="49.0">
+                     <children>
+                        <Button mnemonicParsing="false" text="+" />
+                        <Label text="0">
+                           <VBox.margin>
+                              <Insets bottom="5.0" top="5.0" />
+                           </VBox.margin>
+                           <font>
+                              <Font name="Droid Sans Bold" size="48.0" />
+                           </font>
+                        </Label>
+                        <Button mnemonicParsing="false" text="-" />
+                     </children>
+                  </VBox>
+                  <VBox alignment="CENTER" prefHeight="200.0" prefWidth="49.0">
+                     <children>
+                        <Button mnemonicParsing="false" text="+" />
+                        <Label text="1">
+                           <VBox.margin>
+                              <Insets bottom="5.0" top="5.0" />
+                           </VBox.margin>
+                           <font>
+                              <Font name="Droid Sans Bold" size="48.0" />
+                           </font>
+                        </Label>
+                        <Button mnemonicParsing="false" text="-" />
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+      <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" HBox.hgrow="SOMETIMES">
+         <children>
+            <Label text="Month" />
+            <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
+               <children>
+                  <VBox alignment="CENTER" prefHeight="117.0" prefWidth="49.0">
+                     <children>
+                        <Button mnemonicParsing="false" text="+" />
+                        <Label text="0">
+                           <VBox.margin>
+                              <Insets bottom="5.0" top="5.0" />
+                           </VBox.margin>
+                           <font>
+                              <Font name="Droid Sans Bold" size="48.0" />
+                           </font>
+                        </Label>
+                        <Button mnemonicParsing="false" text="-" />
+                     </children>
+                  </VBox>
+                  <VBox alignment="CENTER" prefHeight="117.0" prefWidth="49.0">
+                     <children>
+                        <Button mnemonicParsing="false" text="+" />
+                        <Label text="1">
+                           <VBox.margin>
+                              <Insets bottom="5.0" top="5.0" />
+                           </VBox.margin>
+                           <font>
+                              <Font name="Droid Sans Bold" size="48.0" />
+                           </font>
+                        </Label>
+                        <Button mnemonicParsing="false" text="-" />
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+      <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" HBox.hgrow="SOMETIMES">
+         <children>
+            <Label text="Year" />
+            <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
+               <children>
+                  <VBox alignment="CENTER" prefHeight="200.0" prefWidth="49.0">
+                     <children>
+                        <Button mnemonicParsing="false" text="+" />
+                        <Label text="1">
+                           <VBox.margin>
+                              <Insets bottom="5.0" top="5.0" />
+                           </VBox.margin>
+                           <font>
+                              <Font name="Droid Sans Bold" size="48.0" />
+                           </font>
+                        </Label>
+                        <Button mnemonicParsing="false" text="-" />
+                     </children>
+                  </VBox>
+                  <VBox alignment="CENTER" prefHeight="200.0" prefWidth="49.0">
+                     <children>
+                        <Button mnemonicParsing="false" text="+" />
+                        <Label text="9">
+                           <VBox.margin>
+                              <Insets bottom="5.0" top="5.0" />
+                           </VBox.margin>
+                           <font>
+                              <Font name="Droid Sans Bold" size="48.0" />
+                           </font>
+                        </Label>
+                        <Button mnemonicParsing="false" text="-" />
+                     </children>
+                  </VBox>
+                  <VBox alignment="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="200.0" prefWidth="49.0">
+                     <children>
+                        <Button mnemonicParsing="false" text="+" />
+                        <Label text="7">
+                           <VBox.margin>
+                              <Insets bottom="5.0" top="5.0" />
+                           </VBox.margin>
+                           <font>
+                              <Font name="Droid Sans Bold" size="48.0" />
+                           </font>
+                        </Label>
+                        <Button mnemonicParsing="false" text="-" />
+                     </children>
+                  </VBox>
+                  <VBox alignment="CENTER" layoutX="143.0" layoutY="10.0" prefHeight="200.0" prefWidth="49.0">
+                     <children>
+                        <Button mnemonicParsing="false" text="+" />
+                        <Label text="0">
+                           <VBox.margin>
+                              <Insets bottom="5.0" top="5.0" />
+                           </VBox.margin>
+                           <font>
+                              <Font name="Droid Sans Bold" size="48.0" />
+                           </font>
+                        </Label>
+                        <Button mnemonicParsing="false" text="-" />
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+   </children>
+</HBox>
