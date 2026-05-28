@@ -1,6 +1,7 @@
 package fr.kylian.photofilter;
 
 import javafx.application.Application;
+import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -15,5 +16,10 @@ public class PhotoFilterApplication extends Application {
         stage.setTitle("PhotoFilter");
         stage.setScene(scene);
         stage.show();
+    }
+
+    @FXML
+    public void selectDate() {
+
     }
 }

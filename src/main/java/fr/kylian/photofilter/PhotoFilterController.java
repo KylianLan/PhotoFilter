@@ -23,9 +23,7 @@ import java.util.*;
 
 public class PhotoFilterController implements Initializable {
 
-    @FXML private DatePicker dateSelect;
     @FXML private Button folderSelect;
-    @FXML private TextArea selectedDates;
     @FXML private TextArea selectedFolder;
 
     private ObservableList<Filter> filters;
@@ -56,10 +54,7 @@ public class PhotoFilterController implements Initializable {
         this.selectedFolder.setText(selectedFolder.getAbsolutePath());
     }
 
-    @FXML
-    void selectDate(ActionEvent event) {
-        if (dateSelect.getValue() != null) {
-            selectedDates.appendText(dateSelect.getValue().toString() + "\n");
-        }
+    public void openFiltersHandler(ActionEvent actionEvent) {
+        
     }
 }

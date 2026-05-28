@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<HBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/25.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fr.kylian.photofilter.FilterController">
+<HBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/25.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fr.kylian.photofilter.FiltersController">
    <children>
       <VBox alignment="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="400.0" prefWidth="435.0" spacing="25.0" style="-fx-background-color: #ededed;" />
       <VBox alignment="CENTER" prefHeight="400.0" prefWidth="435.0" spacing="25.0" HBox.hgrow="SOMETIMES">
