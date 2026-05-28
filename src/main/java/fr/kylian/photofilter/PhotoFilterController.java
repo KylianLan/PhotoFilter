@@ -33,10 +33,10 @@ public class PhotoFilterController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         filters = FXCollections.observableArrayList();
-        filters.add(new Filter("Noël",new Date(0,12,25)));
-        filters.add(new Filter("Reveillon de Noël", new Date(0,12,24)));
-        filters.add(new Filter("Veille du jour de l'an", new Date(0,12,31)));
-        filters.add(new Filter("Jour de l'an", new Date(0,1,1)));
+        filters.add(new Filter("Noël",new Date(0,Calendar.DECEMBER,25)));
+        filters.add(new Filter("Reveillon de Noël", new Date(0,Calendar.DECEMBER,24)));
+        filters.add(new Filter("Veille du jour de l'an", new Date(0,Calendar.DECEMBER,31)));
+        filters.add(new Filter("Jour de l'an", new Date(0,0,1)));
     }
 
     @FXML

@@ -117,12 +117,12 @@ public class Analyzer {
     /**
      * Compares two dates and returns true if the two given dates are the same depending on the filtering mode
      * @param fileDate should be a file's date
-     * @param filter should be a human-readable date
+     * @param filter should be a date added via the filters manager window
      * @param mode desired filtering mode
      * @return true if fileDate matches filter based on the mode
      */
     private boolean compareDates(Date fileDate, Date filter, FilterMode mode) {
-        filter = new Date(filter.getYear() - 1900, filter.getMonth(), filter.getDate());
+        filter = new Date(filter.getYear(), filter.getMonth(), filter.getDate());
         return switch (mode) {
             case DAY -> (fileDate.getDate() == filter.getDate());
 
