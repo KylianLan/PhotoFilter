@@ -1,24 +1,23 @@
 package fr.kylian.photofilter.filter;
 
 import javafx.beans.property.BooleanProperty;
-
-import java.util.Date;
+import javafx.beans.property.SimpleBooleanProperty;
+import java.time.LocalDate;
 
 public class Filter {
 
     private String name;
-    private Date date;
+    private LocalDate date;
     private BooleanProperty enabled;
 
-    public Filter(String name, Date date, boolean enabled) {
+    public Filter(String name, LocalDate date, boolean enabled) {
         this.name = name;
         this.date = date;
-        this.enabled.set(enabled);
+        this.enabled = new SimpleBooleanProperty(enabled);
     }
 
-    public Filter(String name, Date date) {
-        this.name = name;
-        this.date = date;
+    public Filter(String name, LocalDate date) {
+        this(name, date, true);
     }
 
     public String getName() {
@@ -29,11 +28,11 @@ public class Filter {
         this.name = name;
     }
 
-    public Date getDate() {
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(LocalDate date) {
         this.date = date;
     }
 
@@ -45,7 +44,7 @@ public class Filter {
         return enabled;
     }
 
-    public void toogle() {
+    public void toggle() {
         this.enabled.set(!enabled.get());
     }
 }
