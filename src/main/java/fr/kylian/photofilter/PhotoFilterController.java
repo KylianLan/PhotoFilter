@@ -4,14 +4,19 @@ import fr.kylian.photofilter.filter.Filter;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import javafx.event.ActionEvent;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.ResourceBundle;
@@ -54,7 +59,22 @@ public class PhotoFilterController implements Initializable {
 
     @FXML
     void openFiltersHandler(ActionEvent event) {
-        // To be implemented in Phase 2
-        System.out.println("Opening filters...");
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("DateSelector.fxml"));
+            Parent root = loader.load();
+
+            FiltersController controller = loader.getController();
+            controller.setFilters(filters);
+
+            Stage stage = new Stage();
+            stage.setTitle("Gestion des Filtres");
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.initOwner(folderSelect.getScene().getWindow());
+            stage.setScene(new Scene(root));
+            stage.showAndWait();
+            
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
