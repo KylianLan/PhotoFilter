@@ -2,6 +2,7 @@ package fr.kylian.photofilter;
 
 import fr.kylian.photofilter.analyzer.FilterMode;
 import fr.kylian.photofilter.filter.Filter;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
@@ -20,8 +21,12 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import javafx.event.ActionEvent;
+
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.ResourceBundle;
@@ -49,7 +54,7 @@ public class PhotoFilterController implements Initializable {
             Alert dialog = new Alert(Alert.AlertType.INFORMATION);
             dialog.setTitle("À propos");
             dialog.setHeaderText("Copyright");
-            dialog.setContentText("© 2026 Kylian Langlois. Tous droits réservés.");
+            dialog.setContentText("© 2026 Kylian Langlois.\nAll rights reserved.");
 
             dialog.showAndWait();
         });
@@ -84,10 +89,11 @@ public class PhotoFilterController implements Initializable {
             controller.setFilters(filters);
 
             Stage stage = new Stage();
-            stage.setTitle("Gestion des Filtres");
+            stage.setTitle("Set Filters");
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.initOwner(folderSelect.getScene().getWindow());
             stage.setScene(new Scene(root));
+            stage.setResizable(false);
             stage.showAndWait();
             
         } catch (IOException e) {

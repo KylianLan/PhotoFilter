@@ -14,15 +14,15 @@
    <top>
       <MenuBar BorderPane.alignment="CENTER">
         <menus>
-          <Menu mnemonicParsing="false" text="_Fichier">
+          <Menu mnemonicParsing="false" text="_File">
             <items>
-              <MenuItem mnemonicParsing="false" onAction="#selectFolder" text="Charger" />
+              <MenuItem mnemonicParsing="false" onAction="#selectFolder" text="Load" />
             </items>
           </Menu>
-          <Menu mnemonicParsing="false" text="_Aide">
+          <Menu mnemonicParsing="false" text="_Help">
             <items>
-              <MenuItem fx:id="aide" mnemonicParsing="false" text="Aide" />
-                  <MenuItem fx:id="aPropos" mnemonicParsing="false" text="À propos" />
+              <MenuItem fx:id="aide" mnemonicParsing="false" text="Help" />
+                  <MenuItem fx:id="aPropos" mnemonicParsing="false" text="About" />
             </items>
           </Menu>
         </menus>

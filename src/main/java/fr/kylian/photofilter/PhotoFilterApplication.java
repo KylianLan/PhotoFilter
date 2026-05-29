@@ -15,6 +15,7 @@ public class PhotoFilterApplication extends Application {
         Scene scene = new Scene(fxmlLoader.load(), 600, 400);
         stage.setTitle("PhotoFilter");
         stage.setScene(scene);
+        stage.setResizable(false);
         stage.show();
     }
 }
