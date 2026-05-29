@@ -21,8 +21,9 @@
       <VBox alignment="CENTER" prefHeight="400.0" prefWidth="250.0" spacing="25.0">
          <children>
             <DatePicker fx:id="datePicker" />
-            <Button mnemonicParsing="false" onAction="#addFilter" prefWidth="100.0" text="Add Filter" />
-            <Button mnemonicParsing="false" onAction="#closeWindow" prefWidth="100.0" text="Close" />
+            <Button mnemonicParsing="false" onAction="#addFilter" prefWidth="150.0" text="Add Filter" />
+            <Button mnemonicParsing="false" onAction="#removeSelectedFilter" prefWidth="150.0" text="Remove Filter" />
+            <Button mnemonicParsing="false" onAction="#closeWindow" prefWidth="150.0" text="Close" />
          </children>
          <HBox.margin>
             <Insets />

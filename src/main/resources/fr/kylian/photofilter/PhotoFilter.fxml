@@ -16,7 +16,7 @@
         <menus>
           <Menu mnemonicParsing="false" text="_Fichier">
             <items>
-              <MenuItem mnemonicParsing="false" text="Charger" />
+              <MenuItem mnemonicParsing="false" onAction="#selectFolder" text="Charger" />
             </items>
           </Menu>
           <Menu mnemonicParsing="false" text="_Aide">
@@ -40,10 +40,11 @@
           <RowConstraints minHeight="10.0" prefHeight="30.0" valignment="CENTER" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
-            <Button fx:id="folderSelect" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#selectFolder" text="Select Folder" GridPane.hgrow="SOMETIMES" />
+            <Button fx:id="folderSelect" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#selectFolder" prefWidth="125.0" text="Select Folder" GridPane.hgrow="SOMETIMES" />
             <Button fx:id="start" mnemonicParsing="false" text="Start" GridPane.columnIndex="1" GridPane.rowIndex="1" />
             <TextArea fx:id="selectedFolder" editable="false" focusTraversable="false" prefHeight="216.0" prefWidth="250.0" wrapText="true" GridPane.rowIndex="1" />
-            <Button mnemonicParsing="false" onAction="#openFiltersHandler" prefHeight="24.0" prefWidth="106.0" text="Filters" GridPane.columnIndex="2" />
+            <Button mnemonicParsing="false" onAction="#openFiltersHandler" prefHeight="24.0" prefWidth="125.0" text="Filters" GridPane.columnIndex="2" />
+            <TextArea fx:id="enabledFilters" editable="false" focusTraversable="false" layoutX="10.0" layoutY="197.0" prefHeight="216.0" prefWidth="250.0" wrapText="true" GridPane.columnIndex="2" GridPane.rowIndex="1" />
          </children>
       </GridPane>
    </center>
