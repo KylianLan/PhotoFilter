@@ -129,19 +129,20 @@ public class Analyzer {
         LocalDate fileDate = fileDateTime.toLocalDate();
         
         return switch (mode) {
-            case DAY -> fileDate.equals(filter);
-
-            case MONTH -> (fileDate.getDayOfMonth() == filter.getDayOfMonth()
-                    && fileDate.getMonthValue() == filter.getMonthValue());
-
-            case YEAR -> fileDate.equals(filter);
 
             case YEAR_ONLY -> (fileDate.getYear() == filter.getYear());
 
             case MONTH_ONLY -> (fileDate.getMonthValue() == filter.getMonthValue());
 
-            case MONTH_AND_YEAR -> (fileDate.getMonthValue() == filter.getMonthValue() 
+            case DAY_ONLY -> (fileDate.getDayOfMonth() == filter.getDayOfMonth());
+
+            case MONTH_AND_YEAR -> (fileDate.getMonthValue() == filter.getMonthValue()
                     && fileDate.getYear() == filter.getYear());
+
+            case DAY_AND_MONTH -> (fileDate.getDayOfMonth() == filter.getDayOfMonth() &&
+                    fileDate.getMonthValue() == filter.getMonthValue());
+
+            case ALL -> (fileDate.equals(filter));
         };
     }
 

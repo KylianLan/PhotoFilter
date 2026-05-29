@@ -21,8 +21,8 @@
           </Menu>
           <Menu mnemonicParsing="false" text="_Aide">
             <items>
-              <MenuItem mnemonicParsing="false" text="Aide" />
-                  <MenuItem mnemonicParsing="false" text="À propos" />
+              <MenuItem fx:id="aide" mnemonicParsing="false" text="Aide" />
+                  <MenuItem fx:id="aPropos" mnemonicParsing="false" text="À propos" />
             </items>
           </Menu>
         </menus>

@@ -1,5 +1,6 @@
 package fr.kylian.photofilter.filter;
 
+import fr.kylian.photofilter.analyzer.FilterMode;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import java.time.LocalDate;
@@ -9,15 +10,26 @@ public class Filter {
     private String name;
     private LocalDate date;
     private BooleanProperty enabled;
+    private FilterMode filterMode;
 
-    public Filter(String name, LocalDate date, boolean enabled) {
+    public Filter(String name, LocalDate date, boolean b, FilterMode filterMode) {
         this.name = name;
         this.date = date;
-        this.enabled = new SimpleBooleanProperty(enabled);
+        this.enabled = new SimpleBooleanProperty(true);
+        this.filterMode = filterMode;
+
+    }
+
+    public Filter(String name, LocalDate date, boolean enabled) {
+        this(name, date, enabled, FilterMode.ALL);
+    }
+
+    public Filter(String name, LocalDate date, FilterMode filterMode) {
+        this(name, date, true, filterMode);
     }
 
     public Filter(String name, LocalDate date) {
-        this(name, date, true);
+        this(name, date, true, FilterMode.ALL);
     }
 
     public String getName() {
