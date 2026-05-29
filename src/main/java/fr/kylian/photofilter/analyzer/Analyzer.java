@@ -7,7 +7,12 @@ import com.drew.metadata.exif.ExifSubIFDDirectory;
 
 import java.io.IOException;
 import java.io.File;
-
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -15,45 +20,48 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Analyzer {
 
-    private static final Set<String> IMAGE_EXTENSIONS = new HashSet<String>(Arrays.asList(
+    private static final Set<String> IMAGE_EXTENSIONS = new HashSet<>(Arrays.asList(
             ".jpg", ".jpeg", ".png", ".heic", ".heif", ".webp", ".avif"
     ));
-    private static final Set<String> VIDEO_EXTENSIONS = new HashSet<String>(Arrays.asList(
+    private static final Set<String> VIDEO_EXTENSIONS = new HashSet<>(Arrays.asList(
             ".mp4", ".mkv", ".mov"
     ));
 
     public boolean isImage(File file) {
-        if (file.isDirectory() || file.isHidden())  // Verifies if the file is a folder or hidden, ignores it if so
+        if (file.isDirectory() || file.isHidden())
             return false;
 
         String name = file.getName().toLowerCase();
         int dotIndex = name.lastIndexOf(".");
 
-        if (dotIndex <= 0) // Verifies if there is a dot in the file's name in order to check if the file has an extension
+        if (dotIndex <= 0)
             return false;
 
         String ext = name.substring(dotIndex).toLowerCase();
-        return IMAGE_EXTENSIONS.contains(ext); // Only returns true if the file is a supported image
+        return IMAGE_EXTENSIONS.contains(ext);
     }
 
     public boolean isVideo(File file) {
-        if (file.isDirectory() || file.isHidden())  // Verifies if the file is a folder or hidden, ignores it if so
+        if (file.isDirectory() || file.isHidden())
             return false;
 
         String name = file.getName().toLowerCase();
         int dotIndex = name.lastIndexOf(".");
 
-        if (dotIndex <= 0) // Verifies if there is a dot in the file's name in order to check if the file has an extension
+        if (dotIndex <= 0)
             return false;
 
         String ext = name.substring(dotIndex).toLowerCase();
-        return VIDEO_EXTENSIONS.contains(ext); // Only returns true if the file is a supported video
+        return VIDEO_EXTENSIONS.contains(ext);
     }
 
     private List<File> getFiles(final File folder) {
         List<File> files = new ArrayList<>();
+        File[] entries = folder.listFiles();
+        
+        if (entries == null) return files;
 
-        for (final File fileEntry : folder.listFiles()) {
+        for (final File fileEntry : entries) {
             if (fileEntry.isDirectory()) {
                 files.addAll(getFiles(fileEntry));
             } else if (isImage(fileEntry) || isVideo(fileEntry)) {
@@ -64,26 +72,27 @@ public class Analyzer {
         return files;
     }
 
-    public Date getFileCreationDate(File image) {
+    public LocalDateTime getFileCreationDate(File image) {
         if (isVideo(image))
-            return readJsonMetadata(image); // If the given file is a video, automatically read json file
+            return readJsonMetadata(image);
+            
         try {
             Metadata metadata = ImageMetadataReader.readMetadata(image);
             ExifSubIFDDirectory directory = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
             if (directory != null) {
                 Date date = directory.getDate(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL);
                 if (date != null) {
-                    return date;
+                    return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
                 }
             }
         } catch (ImageProcessingException | IOException e) {
             System.err.println("Error while reading metadata: " + e.getMessage());
         }
 
-        return readJsonMetadata(image); // null if Original Date Time does not exist
+        return readJsonMetadata(image);
     }
 
-    private Date readJsonMetadata(File image) {
+    private LocalDateTime readJsonMetadata(File image) {
         File parent = image.getParentFile();
         if (parent == null || !parent.isDirectory()) {
             return null;
@@ -96,7 +105,7 @@ public class Analyzer {
             return null;
         }
 
-        File jsonFile = matchingFiles[0]; // Take the first match
+        File jsonFile = matchingFiles[0];
 
         try {
             ObjectMapper objectMapper = new ObjectMapper();
@@ -105,7 +114,7 @@ public class Analyzer {
             JsonNode timestampNode = root.path("photoTakenTime").path("timestamp");
             if (!timestampNode.isMissingNode()) {
                 long seconds = Long.parseLong(timestampNode.asText());
-                return new Date(seconds * 1000);
+                return LocalDateTime.ofInstant(Instant.ofEpochSecond(seconds), ZoneId.systemDefault());
             }
         } catch (Exception e) {
             System.err.println("Error while fetching metadata from JSON file for " + image.getAbsolutePath());
@@ -114,54 +123,49 @@ public class Analyzer {
         return null;
     }
 
-    /**
-     * Compares two dates and returns true if the two given dates are the same depending on the filtering mode
-     * @param fileDate should be a file's date
-     * @param filter should be a date added via the filters manager window
-     * @param mode desired filtering mode
-     * @return true if fileDate matches filter based on the mode
-     */
-    private boolean compareDates(Date fileDate, Date filter, FilterMode mode) {
-        filter = new Date(filter.getYear(), filter.getMonth(), filter.getDate());
+    private boolean compareDates(LocalDateTime fileDateTime, LocalDate filter, FilterMode mode) {
+        if (fileDateTime == null || filter == null) return false;
+        
+        LocalDate fileDate = fileDateTime.toLocalDate();
+        
         return switch (mode) {
-            case DAY -> (fileDate.getDate() == filter.getDate());
-
-            case MONTH -> (fileDate.getDate() == filter.getDate()
-                    && fileDate.getMonth() == filter.getMonth());
-
-            case YEAR -> (fileDate.getDate() == filter.getDate()
-                    && fileDate.getMonth() == filter.getMonth()
-                    && fileDate.getYear() == filter.getYear());
 
             case YEAR_ONLY -> (fileDate.getYear() == filter.getYear());
 
-            case MONTH_ONLY -> (fileDate.getMonth() == filter.getMonth());
+            case MONTH_ONLY -> (fileDate.getMonthValue() == filter.getMonthValue());
 
-            case MONTH_AND_YEAR -> (fileDate.getMonth() == filter.getMonth() && fileDate.getYear() == filter.getYear());
+            case DAY_ONLY -> (fileDate.getDayOfMonth() == filter.getDayOfMonth());
+
+            case MONTH_AND_YEAR -> (fileDate.getMonthValue() == filter.getMonthValue()
+                    && fileDate.getYear() == filter.getYear());
+
+            case DAY_AND_MONTH -> (fileDate.getDayOfMonth() == filter.getDayOfMonth() &&
+                    fileDate.getMonthValue() == filter.getMonthValue());
+
+            case ALL -> (fileDate.equals(filter));
         };
     }
 
-    public void putInFolder(List<File> files, String folderName, Date filter, FilterMode mode) throws IOException {
+    public void putInFolder(List<File> files, String folderName, LocalDate filter, FilterMode mode) throws IOException {
         File destFolder = new File(folderName);
-        destFolder.mkdir();
+        if (!destFolder.exists()) {
+            destFolder.mkdirs();
+        }
 
         for (File f : files) {
-            if (compareDates(getFileCreationDate(f), filter, mode)) {
-                f.renameTo(new File(destFolder.getAbsolutePath() + "/" + f.getName()));
+            LocalDateTime creationDate = getFileCreationDate(f);
+            if (compareDates(creationDate, filter, mode)) {
+                File destFile = new File(destFolder, f.getName());
+                Files.move(f.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             }
         }
     }
 
     public void main() throws IOException {
-        // Testing purposes only
-//        File folder = new File("C:\\Users\\kylia\\Pictures\\Photos from 2014");
         File folder = new File("/home/kylian/Pictures/images");
         List<File> files = getFiles(folder);
         for (File f : files) {
             System.out.println(f.getName() + " " + getFileCreationDate(f));
         }
-//        putInFolder(files, folder + "/Test", new Date(2014, Calendar.JUNE,2), FilterMode.MONTH_ONLY); // Windows
-//        putInFolder(files, folder + "/Test", new Date(2026, Calendar.FEBRUARY,5), FilterMode.MONTH_AND_YEAR); // Linux
     }
-
 }
