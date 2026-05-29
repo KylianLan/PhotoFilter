@@ -12,24 +12,19 @@ public class Filter {
     private BooleanProperty enabled;
     private FilterMode filterMode;
 
-    public Filter(String name, LocalDate date, boolean b, FilterMode filterMode) {
+    public Filter(String name, LocalDate date, FilterMode filterMode, boolean enabled) {
         this.name = name;
         this.date = date;
-        this.enabled = new SimpleBooleanProperty(true);
         this.filterMode = filterMode;
-
-    }
-
-    public Filter(String name, LocalDate date, boolean enabled) {
-        this(name, date, enabled, FilterMode.ALL);
+        this.enabled = new SimpleBooleanProperty(enabled);
     }
 
     public Filter(String name, LocalDate date, FilterMode filterMode) {
-        this(name, date, true, filterMode);
+        this(name, date, filterMode, true);
     }
 
     public Filter(String name, LocalDate date) {
-        this(name, date, true, FilterMode.ALL);
+        this(name, date, FilterMode.ALL, true);
     }
 
     public String getName() {
@@ -46,6 +41,14 @@ public class Filter {
 
     public void setDate(LocalDate date) {
         this.date = date;
+    }
+
+    public FilterMode getFilterMode() {
+        return filterMode;
+    }
+
+    public void setFilterMode(FilterMode filterMode) {
+        this.filterMode = filterMode;
     }
 
     public boolean isEnabled() {

@@ -1,5 +1,6 @@
 package fr.kylian.photofilter;
 
+import fr.kylian.photofilter.analyzer.FilterMode;
 import fr.kylian.photofilter.filter.Filter;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -60,7 +61,8 @@ public class FiltersController {
         Tooltip.install(checkBox, new Tooltip("Activer/Désactiver ce filtre"));
 
         // 2. ToggleButton pour la Sélection (Suppression)
-        ToggleButton selectBtn = new ToggleButton(filter.getName() + " (" + filter.getDate() + ")");
+        // On affiche aussi le mode pour information
+        ToggleButton selectBtn = new ToggleButton(filter.getName() + " (" + filter.getDate() + ") [" + filter.getFilterMode() + "]");
         selectBtn.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(selectBtn, Priority.ALWAYS);
         selectBtn.setToggleGroup(selectionGroup);
@@ -82,15 +84,26 @@ public class FiltersController {
             return;
         }
 
-        TextInputDialog dialog = new TextInputDialog("Nouveau Filtre");
-        dialog.setTitle("Nom du filtre");
-        dialog.setHeaderText("Donnez un nom à ce filtre :");
-        dialog.setContentText("Nom :");
+        // 1. Demander le nom
+        TextInputDialog nameDialog = new TextInputDialog("Nouveau Filtre");
+        nameDialog.setTitle("Nom du filtre");
+        nameDialog.setHeaderText("Donnez un nom à ce filtre :");
+        nameDialog.setContentText("Nom :");
 
-        Optional<String> result = dialog.showAndWait();
-        result.ifPresent(name -> {
-            filters.add(new Filter(name, date, true));
-        });
+        Optional<String> nameResult = nameDialog.showAndWait();
+        if (nameResult.isEmpty()) return;
+        String name = nameResult.get();
+
+        // 2. Demander le mode de tri
+        ChoiceDialog<FilterMode> modeDialog = new ChoiceDialog<>(FilterMode.DAY_AND_MONTH, FilterMode.values());
+        modeDialog.setTitle("Mode de tri");
+        modeDialog.setHeaderText("Choisissez le mode de tri pour ce filtre :");
+        modeDialog.setContentText("Mode :");
+
+        Optional<FilterMode> modeResult = modeDialog.showAndWait();
+        FilterMode mode = modeResult.orElse(FilterMode.DAY_AND_MONTH);
+
+        filters.add(new Filter(name, date, mode, true));
     }
 
     @FXML
