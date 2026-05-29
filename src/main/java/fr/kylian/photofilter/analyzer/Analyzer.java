@@ -17,6 +17,7 @@ import java.util.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fr.kylian.photofilter.filter.Filter;
 
 public class Analyzer {
 
@@ -27,6 +28,11 @@ public class Analyzer {
             ".mp4", ".mkv", ".mov"
     ));
 
+    /**
+     * Checks if the given file is an image or not
+     * @param file the file to be checked
+     * @return true if file is an image
+     */
     public boolean isImage(File file) {
         if (file.isDirectory() || file.isHidden())
             return false;
@@ -41,6 +47,11 @@ public class Analyzer {
         return IMAGE_EXTENSIONS.contains(ext);
     }
 
+    /**
+     * Checks if the given file is a video or not
+     * @param file the file to be checked
+     * @return true if file is a video
+     */
     public boolean isVideo(File file) {
         if (file.isDirectory() || file.isHidden())
             return false;
@@ -55,6 +66,11 @@ public class Analyzer {
         return VIDEO_EXTENSIONS.contains(ext);
     }
 
+    /**
+     * Analyzes a folder and returns every files in it recursively
+     * @param folder the folder to be analyzed
+     * @return List<File> = a list of every file in the source folder
+     */
     private List<File> getFiles(final File folder) {
         List<File> files = new ArrayList<>();
         File[] entries = folder.listFiles();
@@ -72,12 +88,17 @@ public class Analyzer {
         return files;
     }
 
-    public LocalDateTime getFileCreationDate(File image) {
-        if (isVideo(image))
-            return readJsonMetadata(image);
+    /**
+     * Gives the creation date of a file
+     * @param file the file to be analyzed
+     * @return LocalDateTime = the time photo/video was taken
+     */
+    public LocalDateTime getFileCreationDate(File file) {
+        if (isVideo(file))
+            return readJsonMetadata(file);
             
         try {
-            Metadata metadata = ImageMetadataReader.readMetadata(image);
+            Metadata metadata = ImageMetadataReader.readMetadata(file);
             ExifSubIFDDirectory directory = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
             if (directory != null) {
                 Date date = directory.getDate(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL);
@@ -89,9 +110,14 @@ public class Analyzer {
             System.err.println("Error while reading metadata: " + e.getMessage());
         }
 
-        return readJsonMetadata(image);
+        return readJsonMetadata(file);
     }
 
+    /**
+     * Used if cannot get file metadata directly. Especially useful when analyzing a Google Takeout folder
+     * @param image the source image which metadata json file will be analyzed
+     * @return LocalDateTime = the time the photo/video was taken
+     */
     private LocalDateTime readJsonMetadata(File image) {
         File parent = image.getParentFile();
         if (parent == null || !parent.isDirectory()) {
@@ -123,6 +149,13 @@ public class Analyzer {
         return null;
     }
 
+    /**
+     * Compares dates depending on a filtering type
+     * @param fileDateTime the file's creation date
+     * @param filter the filtering date
+     * @param mode the filter mode (FilterMode)
+     * @return true if the two given dates are the same depending on the filtering mode
+     */
     private boolean compareDates(LocalDateTime fileDateTime, LocalDate filter, FilterMode mode) {
         if (fileDateTime == null || filter == null) return false;
         
@@ -146,26 +179,24 @@ public class Analyzer {
         };
     }
 
-    public void putInFolder(List<File> files, String folderName, LocalDate filter, FilterMode mode) throws IOException {
-        File destFolder = new File(folderName);
+    /**
+     * Automatically moves files from a root folder depending on a filter
+     * @param files the root folder in which the images are
+     * @param filter the filter to be used (contains the name of the folder to be created if doesn't exist, the date, and the filtering mode)
+     * @throws IOException
+     */
+    public void putInFolder(List<File> files, Filter filter) throws IOException {
+        File destFolder = new File(filter.getName());
         if (!destFolder.exists()) {
             destFolder.mkdirs();
         }
 
         for (File f : files) {
             LocalDateTime creationDate = getFileCreationDate(f);
-            if (compareDates(creationDate, filter, mode)) {
+            if (compareDates(creationDate, filter.getDate(), filter.getFilterMode())) {
                 File destFile = new File(destFolder, f.getName());
                 Files.move(f.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             }
-        }
-    }
-
-    public void main() throws IOException {
-        File folder = new File("/home/kylian/Pictures/images");
-        List<File> files = getFiles(folder);
-        for (File f : files) {
-            System.out.println(f.getName() + " " + getFileCreationDate(f));
         }
     }
 }
