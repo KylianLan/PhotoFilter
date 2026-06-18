@@ -62,4 +62,17 @@ public class Filter {
     public void toggle() {
         this.enabled.set(!enabled.get());
     }
+
+    public String displayDate() {
+        LocalDate date = this.getDate();
+
+        return String.valueOf(switch (this.getFilterMode()) {
+            case YEAR_ONLY -> date.getYear();
+            case MONTH_ONLY -> date.getMonthValue();
+            case DAY_ONLY -> date.getDayOfMonth();
+            case MONTH_AND_YEAR -> date.getMonthValue() + "/" + date.getYear();
+            case DAY_AND_MONTH -> date.getDayOfMonth() + "/" + date.getMonthValue();
+            case ALL -> date.getDayOfMonth() + "/" + date.getMonthValue() + "/" + date.getYear();
+        });
+    }
 }

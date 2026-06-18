@@ -62,7 +62,7 @@ public class FiltersController {
 
         // 2. ToggleButton pour la Sélection (Suppression)
         // On affiche aussi le mode pour information
-        ToggleButton selectBtn = new ToggleButton(filter.getName() + " (" + filter.getDate() + ") [" + filter.getFilterMode() + "]");
+        ToggleButton selectBtn = new ToggleButton(filter.getName() + " (" + filter.displayDate() + ")");
         selectBtn.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(selectBtn, Priority.ALWAYS);
         selectBtn.setToggleGroup(selectionGroup);
