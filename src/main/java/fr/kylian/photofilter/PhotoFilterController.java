@@ -1,5 +1,6 @@
 package fr.kylian.photofilter;
 
+import fr.kylian.photofilter.analyzer.FiltersSaver;
 import fr.kylian.photofilter.filter.FilterMode;
 import fr.kylian.photofilter.filter.Filter;
 import javafx.application.Platform;
@@ -47,12 +48,20 @@ public class PhotoFilterController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         filters = FXCollections.observableArrayList();
 
-        FilterMode[] dayAndMonth = new FilterMode[]{FilterMode.DAY, FilterMode.MONTH};
+        // Load saved filters on startup
+        Filter[] savedFilters = FiltersSaver.loadFilters();
+        if (savedFilters != null && savedFilters.length > 0) {
+            filters.addAll(savedFilters);
+        } else {
+            // Fallback default filters
+            FilterMode[] dayAndMonth = new FilterMode[]{FilterMode.DAY, FilterMode.MONTH};
+            filters.add(new Filter("Noël", LocalDate.of(0, 12, 25), dayAndMonth));
+            filters.add(new Filter("Réveillon de Noël", LocalDate.of(0, 12, 24), dayAndMonth));
+            filters.add(new Filter("Veille du jour de l'an", LocalDate.of(0, 12, 31), dayAndMonth));
+            filters.add(new Filter("Jour de l'an", LocalDate.of(0, 1, 1), dayAndMonth));
+        }
 
-        filters.add(new Filter("Noël", LocalDate.of(0, 12, 25), dayAndMonth));
-        filters.add(new Filter("Réveillon de Noël", LocalDate.of(0, 12, 24), dayAndMonth));
-        filters.add(new Filter("Veille du jour de l'an", LocalDate.of(0, 12, 31), dayAndMonth));
-        filters.add(new Filter("Jour de l'an", LocalDate.of(0, 1, 1), dayAndMonth));
+        updateEnabledFiltersTextArea();
 
         about.setOnAction(e -> {
             Alert dialog = new Alert(Alert.AlertType.INFORMATION);
@@ -62,6 +71,17 @@ public class PhotoFilterController implements Initializable {
 
             dialog.showAndWait();
         });
+    }
+
+    private void updateEnabledFiltersTextArea() {
+        StringBuilder sb = new StringBuilder();
+        for (Filter filter : filters) {
+            if (filter.isEnabled()) {
+                sb.append("- ").append(filter.getName())
+                  .append(" (").append(filter.displayDate()).append(")\n");
+            }
+        }
+        enabledFilters.setText(sb.toString());
     }
 
     @FXML
@@ -99,7 +119,10 @@ public class PhotoFilterController implements Initializable {
             stage.setScene(new Scene(root));
             stage.setResizable(false);
             stage.showAndWait();
-            
+
+            // Save filters whenever the window is closed (by button or window cross)
+            FiltersSaver.saveFilters(filters.toArray(new Filter[0]));
+            updateEnabledFiltersTextArea();
         } catch (IOException e) {
             e.printStackTrace();
         }

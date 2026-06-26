@@ -346,8 +346,6 @@ public class FiltersController {
      */
     @FXML
     void closeWindow() {
-        FiltersSaver.saveFilters(filters.toArray(new Filter[0]));
-
         Stage stage = (Stage) filterContainer.getScene().getWindow();
         stage.close();
     }
