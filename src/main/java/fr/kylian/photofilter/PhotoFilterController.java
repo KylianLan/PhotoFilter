@@ -1,6 +1,6 @@
 package fr.kylian.photofilter;
 
-import fr.kylian.photofilter.analyzer.FilterMode;
+import fr.kylian.photofilter.filter.FilterMode;
 import fr.kylian.photofilter.filter.Filter;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -29,6 +29,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.ResourceBundle;
 
 public class PhotoFilterController implements Initializable {
@@ -37,24 +38,27 @@ public class PhotoFilterController implements Initializable {
     @FXML private TextArea selectedFolder;
     @FXML private Button start;
     @FXML private TextArea enabledFilters;
-    @FXML private MenuItem aide;
-    @FXML private MenuItem aPropos;
+    @FXML private MenuItem help;
+    @FXML private MenuItem about;
 
     private ObservableList<Filter> filters;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         filters = FXCollections.observableArrayList();
-        filters.add(new Filter("Noël", LocalDate.of(0, 12, 25), FilterMode.DAY_AND_MONTH));
-        filters.add(new Filter("Réveillon de Noël", LocalDate.of(0, 12, 24), FilterMode.DAY_AND_MONTH));
-        filters.add(new Filter("Veille du jour de l'an", LocalDate.of(0, 12, 31), FilterMode.DAY_AND_MONTH));
-        filters.add(new Filter("Jour de l'an", LocalDate.of(0, 1, 1), FilterMode.DAY_AND_MONTH));
 
-        aPropos.setOnAction(e -> {
+        FilterMode[] dayAndMonth = new FilterMode[]{FilterMode.DAY, FilterMode.MONTH};
+
+        filters.add(new Filter("Noël", LocalDate.of(0, 12, 25), dayAndMonth));
+        filters.add(new Filter("Réveillon de Noël", LocalDate.of(0, 12, 24), dayAndMonth));
+        filters.add(new Filter("Veille du jour de l'an", LocalDate.of(0, 12, 31), dayAndMonth));
+        filters.add(new Filter("Jour de l'an", LocalDate.of(0, 1, 1), dayAndMonth));
+
+        about.setOnAction(e -> {
             Alert dialog = new Alert(Alert.AlertType.INFORMATION);
             dialog.setTitle("À propos");
             dialog.setHeaderText("Copyright");
-            dialog.setContentText("© 2026 Kylian Langlois.\nAll rights reserved.");
+            dialog.setContentText("© 2026 Kylian Langlois.\nTous droits réservés.");
 
             dialog.showAndWait();
         });

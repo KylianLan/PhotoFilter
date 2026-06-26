@@ -11,14 +11,18 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.kylian.photofilter.filter.Filter;
+import fr.kylian.photofilter.filter.FilterMode;
+import fr.kylian.photofilter.filter.FilterRange;
 
+/**
+ * Core logic for analyzing photo/video metadata and organizing files.
+ */
 public class Analyzer {
 
     private static final Set<String> IMAGE_EXTENSIONS = new HashSet<>(Arrays.asList(
@@ -29,9 +33,9 @@ public class Analyzer {
     ));
 
     /**
-     * Checks if the given file is an image or not
-     * @param file the file to be checked
-     * @return true if file is an image
+     * Checks if the given file is an image.
+     * @param file The file to check.
+     * @return true if the file is an image.
      */
     public boolean isImage(File file) {
         if (file.isDirectory() || file.isHidden())
@@ -43,14 +47,14 @@ public class Analyzer {
         if (dotIndex <= 0)
             return false;
 
-        String ext = name.substring(dotIndex).toLowerCase();
+        String ext = name.substring(dotIndex);
         return IMAGE_EXTENSIONS.contains(ext);
     }
 
     /**
-     * Checks if the given file is a video or not
-     * @param file the file to be checked
-     * @return true if file is a video
+     * Checks if the given file is a video.
+     * @param file The file to check.
+     * @return true if the file is a video.
      */
     public boolean isVideo(File file) {
         if (file.isDirectory() || file.isHidden())
@@ -62,14 +66,14 @@ public class Analyzer {
         if (dotIndex <= 0)
             return false;
 
-        String ext = name.substring(dotIndex).toLowerCase();
+        String ext = name.substring(dotIndex);
         return VIDEO_EXTENSIONS.contains(ext);
     }
 
     /**
-     * Analyzes a folder and returns every files in it recursively
-     * @param folder the folder to be analyzed
-     * @return List<File> = a list of every file in the source folder
+     * Recursively scans a folder for image and video files.
+     * @param folder The folder to scan.
+     * @return List of files found.
      */
     private List<File> getFiles(final File folder) {
         List<File> files = new ArrayList<>();
@@ -89,11 +93,11 @@ public class Analyzer {
     }
 
     /**
-     * Gives the creation date of a file
-     * @param file the file to be analyzed
-     * @return LocalDateTime = the time photo/video was taken
+     * Retrieves the creation date of a file from its metadata.
+     * @param file The file to analyze.
+     * @return The creation date, or null if not found.
      */
-    public LocalDateTime getFileCreationDate(File file) {
+    public LocalDate getFileCreationDate(File file) {
         if (isVideo(file))
             return readJsonMetadata(file);
             
@@ -103,22 +107,22 @@ public class Analyzer {
             if (directory != null) {
                 Date date = directory.getDate(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL);
                 if (date != null) {
-                    return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+                    return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
                 }
             }
         } catch (ImageProcessingException | IOException e) {
-            System.err.println("Error while reading metadata: " + e.getMessage());
+            System.err.println("Error while reading EXIF metadata: " + e.getMessage());
         }
 
         return readJsonMetadata(file);
     }
 
     /**
-     * Used if cannot get file metadata directly. Especially useful when analyzing a Google Takeout folder
-     * @param image the source image which metadata json file will be analyzed
-     * @return LocalDateTime = the time the photo/video was taken
+     * Reads creation date from a sidecar JSON file (common in Google Takeout).
+     * @param image The original file.
+     * @return The creation date from JSON, or null if not found.
      */
-    private LocalDateTime readJsonMetadata(File image) {
+    private LocalDate readJsonMetadata(File image) {
         File parent = image.getParentFile();
         if (parent == null || !parent.isDirectory()) {
             return null;
@@ -140,7 +144,7 @@ public class Analyzer {
             JsonNode timestampNode = root.path("photoTakenTime").path("timestamp");
             if (!timestampNode.isMissingNode()) {
                 long seconds = Long.parseLong(timestampNode.asText());
-                return LocalDateTime.ofInstant(Instant.ofEpochSecond(seconds), ZoneId.systemDefault());
+                return LocalDate.ofInstant(Instant.ofEpochSecond(seconds), ZoneId.systemDefault());
             }
         } catch (Exception e) {
             System.err.println("Error while fetching metadata from JSON file for " + image.getAbsolutePath());
@@ -150,40 +154,52 @@ public class Analyzer {
     }
 
     /**
-     * Compares dates depending on a filtering type
-     * @param fileDateTime the file's creation date
-     * @param filter the filtering date
-     * @param mode the filter mode (FilterMode)
-     * @return true if the two given dates are the same depending on the filtering mode
+     * Compares a file's creation date against a filter's criteria.
+     * @param fileDate The file's creation date.
+     * @param filter The filter to check against.
+     * @return true if the file matches the filter.
      */
-    private boolean compareDates(LocalDateTime fileDateTime, LocalDate filter, FilterMode mode) {
-        if (fileDateTime == null || filter == null) return false;
-        
-        LocalDate fileDate = fileDateTime.toLocalDate();
-        
-        return switch (mode) {
+    private boolean compareDates(LocalDate fileDate, Filter filter) {
+        if (fileDate == null || filter == null) return false;
 
-            case YEAR_ONLY -> (fileDate.getYear() == filter.getYear());
+        FilterMode[] params = filter.getFilterParams();
+        if (params == null) return false;
 
-            case MONTH_ONLY -> (fileDate.getMonthValue() == filter.getMonthValue());
+        List<FilterMode> paramList = Arrays.asList(params);
 
-            case DAY_ONLY -> (fileDate.getDayOfMonth() == filter.getDayOfMonth());
+        // 1. Si c'est une plage de dates (RANGE)
+        if (filter.getFilterRange() == FilterRange.RANGE && filter.getSecondDate().isPresent()) {
+            LocalDate startDate = filter.getDate();
+            LocalDate endDate = filter.getSecondDate().get();
 
-            case MONTH_AND_YEAR -> (fileDate.getMonthValue() == filter.getMonthValue()
-                    && fileDate.getYear() == filter.getYear());
+            // On vérifie simplement si la date du fichier est comprise entre le début et la fin
+            // (On suppose ici que pour un range, on compare la date complète)
+            return !fileDate.isBefore(startDate) && !fileDate.isAfter(endDate);
+        }
 
-            case DAY_AND_MONTH -> (fileDate.getDayOfMonth() == filter.getDayOfMonth() &&
-                    fileDate.getMonthValue() == filter.getMonthValue());
+        // 2. Si c'est une date unique (SINGLE_DATE), on garde ta logique avec les paramètres
+        boolean matchesDay = true;
+        boolean matchesMonth = true;
+        boolean matchesYear = true;
 
-            case ALL -> (fileDate.equals(filter));
-        };
+        if (paramList.contains(FilterMode.DAY)) {
+            matchesDay = (fileDate.getDayOfMonth() == filter.getDate().getDayOfMonth());
+        }
+        if (paramList.contains(FilterMode.MONTH)) {
+            matchesMonth = (fileDate.getMonthValue() == filter.getDate().getMonthValue());
+        }
+        if (paramList.contains(FilterMode.YEAR)) {
+            matchesYear = (fileDate.getYear() == filter.getDate().getYear());
+        }
+
+        return (matchesDay && matchesMonth && matchesYear);
     }
 
     /**
-     * Automatically moves files from a root folder depending on a filter
-     * @param files the root folder in which the images are
-     * @param filter the filter to be used (contains the name of the folder to be created if doesn't exist, the date, and the filtering mode)
-     * @throws IOException
+     * Moves files into folders based on the specified filter.
+     * @param files The list of files to process.
+     * @param filter The filter to apply.
+     * @throws IOException If a file operation fails.
      */
     public void putInFolder(List<File> files, Filter filter) throws IOException {
         File destFolder = new File(filter.getName());
@@ -192,8 +208,8 @@ public class Analyzer {
         }
 
         for (File f : files) {
-            LocalDateTime creationDate = getFileCreationDate(f);
-            if (compareDates(creationDate, filter.getDate(), filter.getFilterMode())) {
+            LocalDate creationDate = getFileCreationDate(f);
+            if (compareDates(creationDate, filter)) {
                 File destFile = new File(destFolder, f.getName());
                 Files.move(f.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             }

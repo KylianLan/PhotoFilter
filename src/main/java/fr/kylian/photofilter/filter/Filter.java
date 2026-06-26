@@ -1,30 +1,40 @@
 package fr.kylian.photofilter.filter;
 
-import fr.kylian.photofilter.analyzer.FilterMode;
+import fr.kylian.photofilter.filter.FilterMode;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+
+import java.lang.reflect.Array;
 import java.time.LocalDate;
+import java.util.ArrayDeque;
+import java.util.Optional;
 
 public class Filter {
 
     private String name;
     private LocalDate date;
+    private Optional<LocalDate> secondDate;
     private BooleanProperty enabled;
-    private FilterMode filterMode;
+    private FilterMode[] filterParams;
+    private FilterRange filterRange;
 
-    public Filter(String name, LocalDate date, FilterMode filterMode, boolean enabled) {
+    // Full constructor for filter with a two-dates range
+    public Filter(String name, LocalDate date, Optional<LocalDate> secondDate, FilterMode[] filterParams) {
         this.name = name;
         this.date = date;
-        this.filterMode = filterMode;
-        this.enabled = new SimpleBooleanProperty(enabled);
+        this.secondDate = secondDate;
+        this.enabled = new SimpleBooleanProperty(true);
+        this.filterParams = filterParams;
+        this.filterRange = FilterRange.RANGE;
     }
 
-    public Filter(String name, LocalDate date, FilterMode filterMode) {
-        this(name, date, filterMode, true);
-    }
-
-    public Filter(String name, LocalDate date) {
-        this(name, date, FilterMode.ALL, true);
+    // Simplified constructor for single date filters
+    public Filter(String name, LocalDate date, FilterMode[] filterParams) {
+        this.name = name;
+        this.date = date;
+        this.enabled = new SimpleBooleanProperty(true);
+        this.filterParams = filterParams;
+        this.filterRange = FilterRange.SINGLE_DATE;
     }
 
     public String getName() {
@@ -43,12 +53,12 @@ public class Filter {
         this.date = date;
     }
 
-    public FilterMode getFilterMode() {
-        return filterMode;
+    public FilterMode[] getFilterParams() {
+        return filterParams;
     }
 
-    public void setFilterMode(FilterMode filterMode) {
-        this.filterMode = filterMode;
+    public void setFilterParams(FilterMode[] filterMode) {
+        this.filterParams = filterMode;
     }
 
     public boolean isEnabled() {
@@ -63,16 +73,23 @@ public class Filter {
         this.enabled.set(!enabled.get());
     }
 
-    public String displayDate() {
-        LocalDate date = this.getDate();
+    public Optional<LocalDate> getSecondDate() {
+        return secondDate;
+    }
 
-        return String.valueOf(switch (this.getFilterMode()) {
-            case YEAR_ONLY -> date.getYear();
-            case MONTH_ONLY -> date.getMonthValue();
-            case DAY_ONLY -> date.getDayOfMonth();
-            case MONTH_AND_YEAR -> date.getMonthValue() + "/" + date.getYear();
-            case DAY_AND_MONTH -> date.getDayOfMonth() + "/" + date.getMonthValue();
-            case ALL -> date.getDayOfMonth() + "/" + date.getMonthValue() + "/" + date.getYear();
-        });
+    public void setSecondDate(Optional<LocalDate> secondDate) {
+        this.secondDate = secondDate;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled.set(enabled);
+    }
+
+    public FilterRange getFilterRange() {
+        return filterRange;
+    }
+
+    public void setFilterRange(FilterRange filterRange) {
+        this.filterRange = filterRange;
     }
 }
