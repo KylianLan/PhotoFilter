@@ -10,19 +10,19 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/25.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fr.kylian.photofilter.PhotoFilterController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fr.kylian.photofilter.PhotoFilterController">
    <top>
       <MenuBar BorderPane.alignment="CENTER">
         <menus>
-          <Menu mnemonicParsing="false" text="_File">
+          <Menu mnemonicParsing="false" text="_Fichier">
             <items>
-              <MenuItem mnemonicParsing="false" onAction="#selectFolder" text="Load" />
+              <MenuItem mnemonicParsing="false" onAction="#selectFolder" text="Charger" />
             </items>
           </Menu>
-          <Menu mnemonicParsing="false" text="_Help">
+          <Menu mnemonicParsing="false" text="_Aide">
             <items>
-              <MenuItem fx:id="aide" mnemonicParsing="false" text="Help" />
-                  <MenuItem fx:id="aPropos" mnemonicParsing="false" text="About" />
+              <MenuItem fx:id="aide" mnemonicParsing="false" text="Aide" />
+                  <MenuItem fx:id="aPropos" mnemonicParsing="false" text="À propos" />
             </items>
           </Menu>
         </menus>
@@ -40,10 +40,10 @@
           <RowConstraints minHeight="10.0" prefHeight="30.0" valignment="CENTER" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
-            <Button fx:id="folderSelect" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#selectFolder" prefWidth="125.0" text="Select Folder" GridPane.hgrow="SOMETIMES" />
-            <Button fx:id="start" mnemonicParsing="false" text="Start" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <Button fx:id="folderSelect" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#selectFolder" prefWidth="125.0" text="Choisir un dossier" GridPane.hgrow="SOMETIMES" />
+            <Button fx:id="start" mnemonicParsing="false" text="Filtrer" GridPane.columnIndex="1" GridPane.rowIndex="1" />
             <TextArea fx:id="selectedFolder" editable="false" focusTraversable="false" prefHeight="216.0" prefWidth="250.0" wrapText="true" GridPane.rowIndex="1" />
-            <Button mnemonicParsing="false" onAction="#openFiltersHandler" prefHeight="24.0" prefWidth="125.0" text="Filters" GridPane.columnIndex="2" />
+            <Button mnemonicParsing="false" onAction="#openFiltersHandler" prefHeight="24.0" prefWidth="125.0" text="Filtres" GridPane.columnIndex="2" />
             <TextArea fx:id="enabledFilters" editable="false" focusTraversable="false" layoutX="10.0" layoutY="197.0" prefHeight="216.0" prefWidth="250.0" wrapText="true" GridPane.columnIndex="2" GridPane.rowIndex="1" />
          </children>
       </GridPane>

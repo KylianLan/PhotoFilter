@@ -7,7 +7,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<HBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/25.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fr.kylian.photofilter.FiltersController">
+<HBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fr.kylian.photofilter.FiltersController">
    <children>
       <ScrollPane fitToWidth="true" prefHeight="400.0" prefWidth="300.0" HBox.hgrow="ALWAYS">
          <content>
@@ -21,9 +21,10 @@
       <VBox alignment="CENTER" prefHeight="400.0" prefWidth="250.0" spacing="25.0">
          <children>
             <DatePicker fx:id="datePicker" />
-            <Button mnemonicParsing="false" onAction="#addFilter" prefWidth="150.0" text="Add Filter" />
-            <Button mnemonicParsing="false" onAction="#removeSelectedFilter" prefWidth="150.0" text="Remove Filter" />
-            <Button mnemonicParsing="false" onAction="#closeWindow" prefWidth="150.0" text="Close" />
+            <Button mnemonicParsing="false" onAction="#addFilter" prefWidth="150.0" text="Ajouter un Filtre" />
+            <Button mnemonicParsing="false" onAction="#editSelectedFilter" prefWidth="150.0" text="Modifier le Filtre" />
+            <Button mnemonicParsing="false" onAction="#removeSelectedFilter" prefWidth="150.0" text="Supprimer le Filtre" />
+            <Button mnemonicParsing="false" onAction="#closeWindow" prefWidth="150.0" text="Fermer" />
          </children>
          <HBox.margin>
             <Insets />

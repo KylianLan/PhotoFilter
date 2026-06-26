@@ -84,26 +84,102 @@ public class FiltersController {
             return;
         }
 
-        // 1. Demander le nom
         TextInputDialog nameDialog = new TextInputDialog("Nouveau Filtre");
         nameDialog.setTitle("Nom du filtre");
         nameDialog.setHeaderText("Donnez un nom à ce filtre :");
-        nameDialog.setContentText("Nom :");
-
         Optional<String> nameResult = nameDialog.showAndWait();
         if (nameResult.isEmpty()) return;
         String name = nameResult.get();
 
-        // 2. Demander le mode de tri
-        ChoiceDialog<FilterMode> modeDialog = new ChoiceDialog<>(FilterMode.DAY_AND_MONTH, FilterMode.values());
+        VBox optionsContainer = new VBox(5);
+        optionsContainer.setAlignment(Pos.CENTER);
+
+        ToggleButton day = new ToggleButton("Jour");
+        ToggleButton month = new ToggleButton("Mois");
+        ToggleButton year = new ToggleButton("Année");
+
+        day.setMaxWidth(Double.MAX_VALUE);
+        month.setMaxWidth(Double.MAX_VALUE);
+        year.setMaxWidth(Double.MAX_VALUE);
+
+        optionsContainer.getChildren().addAll(day, month, year);
+
+        Dialog<FilterMode> modeDialog = new Dialog<>();
         modeDialog.setTitle("Mode de tri");
-        modeDialog.setHeaderText("Choisissez le mode de tri pour ce filtre :");
-        modeDialog.setContentText("Mode :");
+        modeDialog.setHeaderText("Sélectionnez le mode de filtrage :");
+        modeDialog.getDialogPane().setContent(optionsContainer);
+        modeDialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        modeDialog.setResultConverter(button -> {
+            if (button == ButtonType.OK) {
+                boolean isDay = day.isSelected();
+                boolean isMonth = month.isSelected();
+                boolean isYear = year.isSelected();
+
+                if (isDay && isMonth && isYear) {
+                    return FilterMode.ALL;
+                } else if (isDay && isMonth) {
+                    return FilterMode.DAY_AND_MONTH;
+                } else if (isMonth && isYear) {
+                    return FilterMode.MONTH_AND_YEAR;
+                } else if (isDay && !isMonth && !isYear) {
+                    return FilterMode.DAY_ONLY;
+                } else if (!isDay && isMonth && !isYear) {
+                    return FilterMode.MONTH_ONLY;
+                } else if (!isDay && !isMonth && isYear) {
+                    return FilterMode.YEAR_ONLY;
+                } else if (isDay && !isMonth && isYear) {
+                    System.err.println("La combinaison du jour et de l'année n'existe pas !");
+                    return null;
+                }
+            }
+            System.err.println("Aucun FilterMode sélectionné !");
+            return null;
+        });
 
         Optional<FilterMode> modeResult = modeDialog.showAndWait();
-        FilterMode mode = modeResult.orElse(FilterMode.DAY_AND_MONTH);
+        if (modeResult.isPresent()) {
+            FilterMode mode =   modeResult.get();
+            filters.add(new Filter(name, date, mode, true));
+        } else {
+            showAlert("Info", "Aucun mode de filtre valide n'a été sélectionné.", Alert.AlertType.WARNING);
+        }
+    }
 
-        filters.add(new Filter(name, date, mode, true));
+    @FXML
+    void editSelectedFilter() {
+        ToggleButton selectedBtn = (ToggleButton) selectionGroup.getSelectedToggle();
+        if (selectedBtn == null) {
+            showAlert("Info", "Sélectionnez un filtre avant de modifier.", Alert.AlertType.INFORMATION);
+            return;
+        }
+
+        Filter filterToEdit = (Filter) selectedBtn.getParent().getUserData();
+
+        // 1. Demander le nouveau nom
+        TextInputDialog nameDialog = new TextInputDialog(filterToEdit.getName());
+        nameDialog.setTitle("Modifier le nom");
+        nameDialog.setHeaderText("Entrez le nouveau nom :");
+
+        Optional<String> nameResult = nameDialog.showAndWait();
+        if (nameResult.isPresent()) {
+            filterToEdit.setName(nameResult.get()); // Mise à jour du modèle
+        }
+
+        // 2. Demander la nouvelle date
+        Dialog<LocalDate> dateDialog = new Dialog<>();
+        dateDialog.setTitle("Modifier la date");
+        DatePicker datePicker = new DatePicker(filterToEdit.getDate());
+        dateDialog.getDialogPane().setContent(datePicker);
+        dateDialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        Optional<LocalDate> dateResult = dateDialog.showAndWait();
+        if (dateResult.isPresent()) {
+            filterToEdit.setDate(dateResult.get()); // Mise à jour du modèle [cite: 134]
+        }
+
+        // 3. Rafraîchir l'affichage sur le bouton
+        selectedBtn.setText(filterToEdit.getName() + " (" + filterToEdit.displayDate() + ")");
     }
 
     @FXML
