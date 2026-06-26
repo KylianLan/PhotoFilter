@@ -92,4 +92,40 @@ public class Filter {
     public void setFilterRange(FilterRange filterRange) {
         this.filterRange = filterRange;
     }
+
+    public String displayDate() {
+        java.time.format.DateTimeFormatter fullFormatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        // 1. Si c'est une plage de dates (RANGE)
+        if (filterRange == FilterRange.RANGE && secondDate.isPresent()) {
+            return "du " + date.format(fullFormatter) + " au " + secondDate.get().format(fullFormatter);
+        }
+
+        // 2. Si c'est une date unique, on adapte le format selon les paramètres cochés
+        if (filterParams == null || filterParams.length == 0) {
+            return date.format(fullFormatter);
+        }
+
+        java.util.List<FilterMode> paramList = java.util.Arrays.asList(filterParams);
+        boolean hasDay = paramList.contains(FilterMode.DAY);
+        boolean hasMonth = paramList.contains(FilterMode.MONTH);
+        boolean hasYear = paramList.contains(FilterMode.YEAR);
+
+        if (hasDay && hasMonth && hasYear) {
+            return date.format(fullFormatter); // ex: 25/12/2026
+        } else if (hasDay && hasMonth) {
+            return date.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM")); // ex: 25/12 (Noël)
+        } else if (hasMonth && hasYear) {
+            return date.format(java.time.format.DateTimeFormatter.ofPattern("MM/yyyy")); // ex: 12/2026
+        } else if (hasDay) {
+            return "Jour " + date.getDayOfMonth();
+        } else if (hasMonth) {
+            return "Mois " + date.getMonthValue();
+        } else if (hasYear) {
+            return "Année " + date.getYear();
+        }
+
+        return date.toString();
+    }
+
 }

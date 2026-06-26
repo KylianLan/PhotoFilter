@@ -75,13 +75,8 @@ public class FiltersController {
 
         // 2. ToggleButton for selection (deletion)
         // Displays filter name, date, and active modes
-        String dateInfo = filter.getDate().toString();
-        if (filter.getFilterRange() == FilterRange.RANGE && filter.getSecondDate().isPresent()) {
-            dateInfo += " to " + filter.getSecondDate().get().toString();
-        }
-        
-        String modeString = Arrays.toString(filter.getFilterParams());
-        ToggleButton selectBtn = new ToggleButton(filter.getName() + " (" + dateInfo + ") " + modeString);
+        ToggleButton selectBtn = new ToggleButton(filter.getName() + " (" + filter.displayDate() + ")");
+
         selectBtn.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(selectBtn, Priority.ALWAYS);
         selectBtn.setToggleGroup(selectionGroup);
