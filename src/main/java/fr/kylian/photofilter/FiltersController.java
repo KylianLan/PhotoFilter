@@ -1,5 +1,6 @@
 package fr.kylian.photofilter;
 
+import fr.kylian.photofilter.analyzer.FiltersSaver;
 import fr.kylian.photofilter.filter.FilterMode;
 import fr.kylian.photofilter.filter.Filter;
 import fr.kylian.photofilter.filter.FilterRange;
@@ -345,7 +346,7 @@ public class FiltersController {
      */
     @FXML
     void closeWindow() {
-
+        FiltersSaver.saveFilters(filters.toArray(new Filter[0]));
 
         Stage stage = (Stage) filterContainer.getScene().getWindow();
         stage.close();
