@@ -284,8 +284,15 @@ public class FiltersController {
             return;
         }
 
-        Filter filterToRemove = (Filter) selectedBtn.getParent().getUserData();
-        filters.remove(filterToRemove);
+        Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION, "Voulez-vous vraiment supprimer ce filtre ?", ButtonType.YES, ButtonType.NO);
+        confirmation.setTitle("Suppression du filtre");
+
+        confirmation.showAndWait();
+
+        if (confirmation.getResult() == ButtonType.YES) {
+            Filter filterToRemove = (Filter) selectedBtn.getParent().getUserData();
+            filters.remove(filterToRemove);
+        }
     }
 
     /**
