@@ -130,20 +130,30 @@ public class FiltersController {
         }
     }
 
+
+    private FilterMode[] askFilterParams() {
+        // Pour la création : par défaut tout est coché
+        return askFilterParams(new FilterMode[]{FilterMode.DAY, FilterMode.MONTH, FilterMode.YEAR});
+    }
+
     /**
      * Shows a dialog to select which parts of the date to use for filtering.
      */
-    private FilterMode[] askFilterParams() {
+    private FilterMode[] askFilterParams(FilterMode[] defaultParams) {
         Dialog<FilterMode[]> dialog = new Dialog<>();
-        dialog.setTitle("Filter Parameters");
-        dialog.setHeaderText("Step 1: Choose date elements to use for filtering:");
+        dialog.setTitle("Paramètres du filtre");
+        dialog.setHeaderText("Étape 1 : Choisissez les éléments de date à utiliser :");
+
+        List<FilterMode> defaultList = defaultParams != null ? Arrays.asList(defaultParams) : new ArrayList<>();
 
         CheckBox dayCb = new CheckBox("Day");
         CheckBox monthCb = new CheckBox("Month");
         CheckBox yearCb = new CheckBox("Year");
-        dayCb.setSelected(true);
-        monthCb.setSelected(true);
-        yearCb.setSelected(true);
+
+        // On coche les cases en fonction des paramètres actuels du filtre
+        dayCb.setSelected(defaultList.contains(FilterMode.DAY));
+        monthCb.setSelected(defaultList.contains(FilterMode.MONTH));
+        yearCb.setSelected(defaultList.contains(FilterMode.YEAR));
 
         VBox vbox = new VBox(10, dayCb, monthCb, yearCb);
         vbox.setPadding(new Insets(20));
@@ -164,14 +174,11 @@ public class FiltersController {
         });
 
         Optional<FilterMode[]> result = dialog.showAndWait();
-        if (result.isPresent()) {
-            if (result.get().length == 0) {
-                showAlert("Error", "Please select at least one parameter.", Alert.AlertType.ERROR);
-                return null;
-            }
-            return result.get();
+        if (result.isPresent() && result.get().length == 0) {
+            showAlert("Erreur", "Veuillez sélectionner au moins un paramètre.", Alert.AlertType.ERROR);
+            return null;
         }
-        return null;
+        return result.orElse(null);
     }
 
     /**
@@ -191,9 +198,14 @@ public class FiltersController {
      * Shows a dialog to input specific date values based on selected parameters.
      */
     private LocalDate askDateValues(String title, FilterMode[] params) {
+        // Pour la création : on part d'aujourd'hui
+        return askDateValues(title, params, LocalDate.now());
+    }
+
+    private LocalDate askDateValues(String title, FilterMode[] params, LocalDate defaultDate) {
         Dialog<LocalDate> dialog = new Dialog<>();
         dialog.setTitle(title);
-        dialog.setHeaderText("Steps 3, 4, 5: Enter the date values:");
+        dialog.setHeaderText("Entrez les valeurs de la date :");
 
         GridPane grid = new GridPane();
         grid.setHgap(10);
@@ -201,22 +213,23 @@ public class FiltersController {
         grid.setPadding(new Insets(20));
 
         List<FilterMode> paramList = Arrays.asList(params);
-        
-        Spinner<Integer> yearSpinner = new Spinner<>(1900, 2100, LocalDate.now().getYear());
-        Spinner<Integer> monthSpinner = new Spinner<>(1, 12, LocalDate.now().getMonthValue());
-        Spinner<Integer> daySpinner = new Spinner<>(1, 31, LocalDate.now().getDayOfMonth());
+
+        // On initialise les Spinners avec la date actuelle du filtre
+        Spinner<Integer> yearSpinner = new Spinner<>(1900, 2100, defaultDate.getYear());
+        Spinner<Integer> monthSpinner = new Spinner<>(1, 12, defaultDate.getMonthValue());
+        Spinner<Integer> daySpinner = new Spinner<>(1, 31, defaultDate.getDayOfMonth());
 
         int row = 0;
         if (paramList.contains(FilterMode.YEAR)) {
-            grid.add(new Label("Year:"), 0, row);
+            grid.add(new Label("Année :"), 0, row);
             grid.add(yearSpinner, 1, row++);
         }
         if (paramList.contains(FilterMode.MONTH)) {
-            grid.add(new Label("Month:"), 0, row);
+            grid.add(new Label("Mois :"), 0, row);
             grid.add(monthSpinner, 1, row++);
         }
         if (paramList.contains(FilterMode.DAY)) {
-            grid.add(new Label("Day:"), 0, row);
+            grid.add(new Label("Jour :"), 0, row);
             grid.add(daySpinner, 1, row++);
         }
 
@@ -226,36 +239,38 @@ public class FiltersController {
 
         dialog.setResultConverter(btn -> {
             if (btn == okButton) {
-                // If a parameter is not selected, we use a default value (e.g., 2000-01-01)
-                // The analyzer should ignore these fields based on FilterMode[]
                 int year = paramList.contains(FilterMode.YEAR) ? yearSpinner.getValue() : 2000;
                 int month = paramList.contains(FilterMode.MONTH) ? monthSpinner.getValue() : 1;
                 int day = paramList.contains(FilterMode.DAY) ? daySpinner.getValue() : 1;
                 try {
                     return LocalDate.of(year, month, day);
                 } catch (Exception e) {
-                    showAlert("Error", "Invalid date entered.", Alert.AlertType.ERROR);
+                    showAlert("Erreur", "Date invalide.", Alert.AlertType.ERROR);
                     return null;
                 }
             }
             return null;
         });
 
-        Optional<LocalDate> result = dialog.showAndWait();
-        return result.orElse(null);
+        return dialog.showAndWait().orElse(null);
     }
 
     /**
      * Shows a dialog to input the filter name.
      */
     private String askFilterName() {
-        TextInputDialog dialog = new TextInputDialog("New Filter");
-        dialog.setTitle("Filter Name");
-        dialog.setHeaderText("Step 6: Enter a name for this filter:");
-        dialog.setContentText("Name:");
+        // Pour la création
+        return askFilterName("Nouveau Filtre");
+    }
 
-        Optional<String> result = dialog.showAndWait();
-        return result.orElse(null);
+    private String askFilterName(String defaultName) {
+        // Le TextInputDialog sera pré-rempli avec defaultName
+        TextInputDialog dialog = new TextInputDialog(defaultName);
+        dialog.setTitle("Nom du filtre");
+        dialog.setHeaderText("Entrez un nom pour ce filtre :");
+        dialog.setContentText("Nom :");
+
+        return dialog.showAndWait().orElse(null);
     }
 
     /**
@@ -278,8 +293,44 @@ public class FiltersController {
      */
     @FXML
     void editSelectedFilter() {
-        // TODO: Refaire la logique d'édition pour supporter FilterMode[] et FilterRange
-        showAlert("En développement", "L'édition de filtres complexes arrive bientôt !", Alert.AlertType.INFORMATION);
+        ToggleButton selectedBtn = (ToggleButton) selectionGroup.getSelectedToggle();
+        if (selectedBtn == null) {
+            showAlert("Info", "Sélectionnez un filtre en cliquant sur son nom avant de le modifier.", Alert.AlertType.INFORMATION);
+            return;
+        }
+
+        // On récupère le filtre lié au bouton
+        Filter filterToEdit = (Filter) selectedBtn.getParent().getUserData();
+
+        // 1. Modifier les paramètres (Day, Month, Year) avec les valeurs actuelles pré-cochées
+        FilterMode[] newParams = askFilterParams(filterToEdit.getFilterParams());
+        if (newParams == null) return;
+
+        // 2. Modifier la date principale avec la date actuelle
+        LocalDate newFirstDate = askDateValues("Modifier la date principale", newParams, filterToEdit.getDate());
+        if (newFirstDate == null) return;
+
+        // 3. Modifier la deuxième date (UNIQUEMENT si c'est un RANGE)
+        Optional<LocalDate> newSecondDate = filterToEdit.getSecondDate();
+        if (filterToEdit.getFilterRange() == FilterRange.RANGE) {
+            LocalDate defaultDate2 = filterToEdit.getSecondDate().orElse(LocalDate.now());
+            LocalDate date2 = askDateValues("Modifier la date de fin", newParams, defaultDate2);
+            if (date2 == null) return;
+            newSecondDate = Optional.of(date2);
+        }
+
+        // 4. Modifier le nom avec l'ancien nom pré-rempli
+        String newName = askFilterName(filterToEdit.getName());
+        if (newName == null) return;
+
+        // 5. Appliquer les modifications à l'objet
+        filterToEdit.setFilterParams(newParams);
+        filterToEdit.setDate(newFirstDate);
+        filterToEdit.setSecondDate(newSecondDate);
+        filterToEdit.setName(newName);
+
+        // 6. Mettre à jour le texte du bouton dans l'interface
+        selectedBtn.setText(filterToEdit.getName() + " (" + filterToEdit.displayDate() + ")");
     }
 
     /**
