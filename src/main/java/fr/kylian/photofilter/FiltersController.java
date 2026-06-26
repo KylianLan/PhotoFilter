@@ -345,6 +345,8 @@ public class FiltersController {
      */
     @FXML
     void closeWindow() {
+
+
         Stage stage = (Stage) filterContainer.getScene().getWindow();
         stage.close();
     }

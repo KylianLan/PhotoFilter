@@ -1,5 +1,6 @@
 package fr.kylian.photofilter.filter;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import fr.kylian.photofilter.filter.FilterMode;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -13,10 +14,17 @@ public class Filter {
 
     private String name;
     private LocalDate date;
-    private Optional<LocalDate> secondDate;
+    private Optional<LocalDate> secondDate = Optional.empty();
+
+    @JsonIgnore
     private BooleanProperty enabled;
+
     private FilterMode[] filterParams;
     private FilterRange filterRange;
+
+    public Filter() {
+        this.enabled = new SimpleBooleanProperty(true);
+    }
 
     // Full constructor for filter with a two-dates range
     public Filter(String name, LocalDate date, Optional<LocalDate> secondDate, FilterMode[] filterParams) {
@@ -65,6 +73,7 @@ public class Filter {
         return enabled.get();
     }
 
+    @JsonIgnore
     public BooleanProperty enabledProperty() {
         return enabled;
     }
