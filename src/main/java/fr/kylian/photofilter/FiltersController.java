@@ -4,12 +4,17 @@ import fr.kylian.photofilter.analyzer.FiltersSaver;
 import fr.kylian.photofilter.filter.FilterMode;
 import fr.kylian.photofilter.filter.Filter;
 import fr.kylian.photofilter.filter.FilterRange;
+import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -39,25 +44,45 @@ public class FiltersController {
         this.filters = filters;
         
         // Initial population of the UI list
+        refreshUI();
+
+        // Listen for changes in the filters list to update the UI
+        this.filters.addListener((ListChangeListener<Filter>) change -> {
+            refreshUI();
+        });
+    }
+
+    /**
+     * Rebuilds the UI to match the current state and order of the filters list.
+     * Restores selection state if possible.
+     */
+    private void refreshUI() {
+        // Save selection
+        Toggle selectedToggle = selectionGroup.getSelectedToggle();
+        Filter selectedFilter = null;
+        if (selectedToggle != null && selectedToggle instanceof ToggleButton) {
+            selectedFilter = (Filter) ((ToggleButton) selectedToggle).getParent().getUserData();
+        }
+
+        filterContainer.getChildren().clear();
         for (Filter filter : filters) {
             addFilterRow(filter);
         }
 
-        // Listen for changes in the filters list to update the UI
-        this.filters.addListener((ListChangeListener<Filter>) change -> {
-            while (change.next()) {
-                if (change.wasAdded()) {
-                    for (Filter f : change.getAddedSubList()) {
-                        addFilterRow(f);
+        // Restore selection
+        if (selectedFilter != null) {
+            for (Node node : filterContainer.getChildren()) {
+                if (node instanceof HBox && node.getUserData() == selectedFilter) {
+                    for (Node child : ((HBox) node).getChildren()) {
+                        if (child instanceof ToggleButton) {
+                            selectionGroup.selectToggle((ToggleButton) child);
+                            break;
+                        }
                     }
-                }
-                if (change.wasRemoved()) {
-                    for (Filter f : change.getRemoved()) {
-                        removeFilterRow(f);
-                    }
+                    break;
                 }
             }
-        });
+        }
     }
 
     /**
@@ -68,6 +93,11 @@ public class FiltersController {
         row.setAlignment(Pos.CENTER_LEFT);
         row.setPadding(new Insets(5));
         row.setUserData(filter);
+
+        // 0. Drag Handle
+        Label dragHandle = new Label("☰");
+        dragHandle.setStyle("-fx-cursor: move; -fx-text-fill: #888888; -fx-font-size: 14px; -fx-font-weight: bold;");
+        dragHandle.setPadding(new Insets(0, 5, 0, 5));
 
         // 1. CheckBox for Enabling/Disabling the filter
         CheckBox checkBox = new CheckBox();
@@ -83,15 +113,70 @@ public class FiltersController {
         selectBtn.setToggleGroup(selectionGroup);
         Tooltip.install(selectBtn, new Tooltip("Click to select for deletion"));
 
-        row.getChildren().addAll(checkBox, selectBtn);
+        row.getChildren().addAll(dragHandle, checkBox, selectBtn);
         filterContainer.getChildren().add(row);
-    }
 
-    /**
-     * Removes a filter row from the UI.
-     */
-    private void removeFilterRow(Filter filter) {
-        filterContainer.getChildren().removeIf(node -> node.getUserData() == filter);
+        // Set up Drag and Drop events
+        dragHandle.setOnDragDetected(event -> {
+            Dragboard db = dragHandle.startDragAndDrop(TransferMode.MOVE);
+            ClipboardContent content = new ClipboardContent();
+            content.putString(String.valueOf(filterContainer.getChildren().indexOf(row)));
+            db.setContent(content);
+            row.setOpacity(0.5);
+            event.consume();
+        });
+
+        row.setOnDragOver(event -> {
+            if (event.getGestureSource() != dragHandle && event.getDragboard().hasString()) {
+                event.acceptTransferModes(TransferMode.MOVE);
+            }
+            event.consume();
+        });
+
+        row.setOnDragEntered(event -> {
+            if (event.getGestureSource() != dragHandle && event.getDragboard().hasString()) {
+                row.setStyle("-fx-border-color: #0078d7; -fx-border-width: 2px; -fx-border-style: dashed; -fx-background-color: #e6f2ff;");
+            }
+            event.consume();
+        });
+
+        row.setOnDragExited(event -> {
+            row.setStyle("");
+            event.consume();
+        });
+
+        row.setOnDragDropped(event -> {
+            Dragboard db = event.getDragboard();
+            boolean success = false;
+            if (db.hasString()) {
+                try {
+                    int sourceIndex = Integer.parseInt(db.getString());
+                    int targetIndex = filterContainer.getChildren().indexOf(row);
+                    if (sourceIndex >= 0 && sourceIndex < filters.size() &&
+                        targetIndex >= 0 && targetIndex < filters.size() &&
+                        sourceIndex != targetIndex) {
+                        
+                        final int srcIdx = sourceIndex;
+                        final int tgtIdx = targetIndex;
+                        // Defer to runLater to avoid issues while the drag event is in progress
+                        Platform.runLater(() -> {
+                            Filter movedFilter = filters.remove(srcIdx);
+                            filters.add(tgtIdx, movedFilter);
+                        });
+                        success = true;
+                    }
+                } catch (NumberFormatException e) {
+                    // Ignore
+                }
+            }
+            event.setDropCompleted(success);
+            event.consume();
+        });
+
+        row.setOnDragDone(event -> {
+            row.setOpacity(1.0);
+            event.consume();
+        });
     }
 
     /**
@@ -147,9 +232,9 @@ public class FiltersController {
 
         List<FilterMode> defaultList = defaultParams != null ? Arrays.asList(defaultParams) : new ArrayList<>();
 
-        CheckBox dayCb = new CheckBox("Day");
-        CheckBox monthCb = new CheckBox("Month");
-        CheckBox yearCb = new CheckBox("Year");
+        CheckBox dayCb = new CheckBox("Jour");
+        CheckBox monthCb = new CheckBox("Mois");
+        CheckBox yearCb = new CheckBox("Année");
 
         // On coche les cases en fonction des paramètres actuels du filtre
         dayCb.setSelected(defaultList.contains(FilterMode.DAY));
@@ -221,17 +306,17 @@ public class FiltersController {
         Spinner<Integer> daySpinner = new Spinner<>(1, 31, defaultDate.getDayOfMonth());
 
         int row = 0;
-        if (paramList.contains(FilterMode.YEAR)) {
-            grid.add(new Label("Année :"), 0, row);
-            grid.add(yearSpinner, 1, row++);
+        if (paramList.contains(FilterMode.DAY)) {
+            grid.add(new Label("Jour :"), 0, row);
+            grid.add(daySpinner, 1, row++);
         }
         if (paramList.contains(FilterMode.MONTH)) {
             grid.add(new Label("Mois :"), 0, row);
             grid.add(monthSpinner, 1, row++);
         }
-        if (paramList.contains(FilterMode.DAY)) {
-            grid.add(new Label("Jour :"), 0, row);
-            grid.add(daySpinner, 1, row++);
+        if (paramList.contains(FilterMode.YEAR)) {
+            grid.add(new Label("Année :"), 0, row);
+            grid.add(yearSpinner, 1, row++);
         }
 
         dialog.getDialogPane().setContent(grid);
