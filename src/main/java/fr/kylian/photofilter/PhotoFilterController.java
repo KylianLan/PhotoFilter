@@ -1,5 +1,6 @@
 package fr.kylian.photofilter;
 
+import fr.kylian.photofilter.analyzer.Analyzer;
 import fr.kylian.photofilter.analyzer.FiltersSaver;
 import fr.kylian.photofilter.filter.FilterMode;
 import fr.kylian.photofilter.filter.Filter;
@@ -18,6 +19,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -126,5 +128,24 @@ public class PhotoFilterController implements Initializable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @FXML
+    private void startFiltering() {
+        Stage stage = (Stage) folderSelect.getScene().getWindow();
+
+        File destination = new File(System.getProperty("user.home"));
+        DirectoryChooser destSelection = new DirectoryChooser();
+        destSelection.setTitle("Choisir une destination");
+        destSelection.setInitialDirectory(destination);
+
+        destination = destSelection.showDialog(stage);
+        System.out.println(destination.getAbsolutePath());
+        System.out.println(filters);
+
+        Analyzer analyzer = new Analyzer();
+
+
+
     }
 }
