@@ -49,12 +49,14 @@ public class PhotoFilterController implements Initializable {
     private ObservableList<Filter> filters;
     private File folder;
 
+    private final FiltersSaver filtersSaver = new FiltersSaver();
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         filters = FXCollections.observableArrayList();
 
         // Load saved filters on startup
-        Filter[] savedFilters = FiltersSaver.loadFilters();
+        Filter[] savedFilters = filtersSaver.loadFilters();
         if (savedFilters != null && savedFilters.length > 0) {
             filters.addAll(savedFilters);
         } else {
@@ -128,7 +130,7 @@ public class PhotoFilterController implements Initializable {
             stage.showAndWait();
 
             // Save filters whenever the window is closed (by button or window cross)
-            FiltersSaver.saveFilters(filters.toArray(new Filter[0]));
+            filtersSaver.saveFilters(filters.toArray(new Filter[0]));
             updateEnabledFiltersTextArea();
         } catch (IOException e) {
             e.printStackTrace();
