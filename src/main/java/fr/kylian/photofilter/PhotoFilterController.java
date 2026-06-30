@@ -16,6 +16,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.DirectoryChooser;
@@ -25,7 +26,6 @@ import javafx.stage.Stage;
 
 import javafx.event.ActionEvent;
 
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -33,6 +33,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class PhotoFilterController implements Initializable {
@@ -40,11 +41,13 @@ public class PhotoFilterController implements Initializable {
     @FXML private Button folderSelect;
     @FXML private TextArea selectedFolder;
     @FXML private Button start;
+    @FXML private ProgressBar progressBar;
     @FXML private TextArea enabledFilters;
     @FXML private MenuItem help;
     @FXML private MenuItem about;
 
     private ObservableList<Filter> filters;
+    private File folder;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -103,6 +106,8 @@ public class PhotoFilterController implements Initializable {
         if (selectedFolder != null) {
             this.selectedFolder.setText(selectedFolder.getAbsolutePath());
         }
+
+        this.folder = selectedFolder;
     }
 
     @FXML
@@ -132,20 +137,87 @@ public class PhotoFilterController implements Initializable {
 
     @FXML
     private void startFiltering() {
+        if (folder == null) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Dossier manquant");
+            alert.setHeaderText(null);
+            alert.setContentText("Veuillez choisir un dossier source contenant les photos à filtrer.");
+            alert.showAndWait();
+            return;
+        }
+
         Stage stage = (Stage) folderSelect.getScene().getWindow();
 
-        File destination = new File(System.getProperty("user.home"));
+        File initialDestination = new File(System.getProperty("user.home"));
         DirectoryChooser destSelection = new DirectoryChooser();
         destSelection.setTitle("Choisir une destination");
-        destSelection.setInitialDirectory(destination);
+        destSelection.setInitialDirectory(initialDestination);
 
-        destination = destSelection.showDialog(stage);
-        System.out.println(destination.getAbsolutePath());
-        System.out.println(filters);
+        File destination = destSelection.showDialog(stage);
+        if (destination == null) {
+            return; // L'utilisateur a annulé la sélection
+        }
 
-        Analyzer analyzer = new Analyzer();
+        System.out.println("Source: " + folder.getAbsolutePath());
+        System.out.println("Destination: " + destination.getAbsolutePath());
+        System.out.println("Filters: " + filters);
 
+        start.setDisable(true);
+        progressBar.setProgress(0.0);
 
+        javafx.concurrent.Task<Void> task = new javafx.concurrent.Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                Analyzer analyzer = new Analyzer();
+                List<File> files = analyzer.getFiles(folder);
 
+                int count = files.size();
+                System.out.println("Fichiers trouvés: " + count);
+                
+                long enabledCount = filters.stream().filter(Filter::isEnabled).count();
+                int totalWork = (int) (count * enabledCount);
+                int[] workDone = {0};
+
+                Runnable onProgress = () -> {
+                    workDone[0]++;
+                    updateProgress(workDone[0], totalWork);
+                };
+
+                for (Filter filter : filters) {
+                    if (filter.isEnabled()) {
+                        analyzer.putInFolder(destination, files, filter, onProgress);
+                    }
+                }
+                return null;
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            progressBar.progressProperty().unbind();
+            progressBar.setProgress(1.0);
+            start.setDisable(false);
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Terminé");
+            alert.setHeaderText(null);
+            alert.setContentText("Le filtrage est terminé !");
+            alert.showAndWait();
+        });
+
+        task.setOnFailed(e -> {
+            progressBar.progressProperty().unbind();
+            progressBar.setProgress(0.0);
+            start.setDisable(false);
+            Throwable exception = task.getException();
+            System.err.println("Error while filtering files:\n\t" + exception.getMessage());
+            exception.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Erreur");
+            alert.setHeaderText(null);
+            alert.setContentText("Une erreur s'est produite lors du filtrage : " + exception.getMessage());
+            alert.showAndWait();
+        });
+
+        progressBar.progressProperty().bind(task.progressProperty());
+        new Thread(task).start();
     }
 }

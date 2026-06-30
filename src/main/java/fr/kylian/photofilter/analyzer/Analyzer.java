@@ -32,6 +32,9 @@ public class Analyzer {
             ".mp4", ".mkv", ".mov"
     ));
 
+    // Jackson ObjectMapper réutilisé pour de meilleures performances
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     /**
      * Checks if the given file is an image.
      * @param file The file to check.
@@ -75,10 +78,10 @@ public class Analyzer {
      * @param folder The folder to scan.
      * @return List of files found.
      */
-    private List<File> getFiles(final File folder) {
+    public List<File> getFiles(final File folder) {
         List<File> files = new ArrayList<>();
         File[] entries = folder.listFiles();
-        
+
         if (entries == null) return files;
 
         for (final File fileEntry : entries) {
@@ -93,14 +96,17 @@ public class Analyzer {
     }
 
     /**
-     * Retrieves the creation date of a file from its metadata.
+     * Retrieves the creation date of a file from its metadata, JSON takeout,
+     * or fallback filesystem attributes.
      * @param file The file to analyze.
-     * @return The creation date, or null if not found.
+     * @return The creation date, or a filesystem/current fallback.
      */
     public LocalDate getFileCreationDate(File file) {
-        if (isVideo(file))
-            return readJsonMetadata(file);
-            
+        if (isVideo(file)) {
+            LocalDate date = readJsonMetadata(file);
+            return date != null ? date : getFilesystemCreationDate(file);
+        }
+
         try {
             Metadata metadata = ImageMetadataReader.readMetadata(file);
             ExifSubIFDDirectory directory = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
@@ -111,10 +117,29 @@ public class Analyzer {
                 }
             }
         } catch (ImageProcessingException | IOException e) {
-            System.err.println("Error while reading EXIF metadata: " + e.getMessage());
+            // Silently fall back
         }
 
-        return readJsonMetadata(file);
+        LocalDate takeoutDate = readJsonMetadata(file);
+        if (takeoutDate != null) return takeoutDate;
+
+        return getFilesystemCreationDate(file);
+    }
+
+    /**
+     * Fallback to retrieve the filesystem-level creation date or last modified date.
+     */
+    private LocalDate getFilesystemCreationDate(File file) {
+        try {
+            java.nio.file.attribute.BasicFileAttributes attrs = Files.readAttributes(file.toPath(), java.nio.file.attribute.BasicFileAttributes.class);
+            Instant instant = attrs.creationTime().toInstant();
+            if (attrs.lastModifiedTime().toInstant().isBefore(instant)) {
+                instant = attrs.lastModifiedTime().toInstant();
+            }
+            return instant.atZone(ZoneId.systemDefault()).toLocalDate();
+        } catch (IOException e) {
+            return LocalDate.now(); // Worst case fallback
+        }
     }
 
     /**
@@ -138,9 +163,7 @@ public class Analyzer {
         File jsonFile = matchingFiles[0];
 
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode root = objectMapper.readTree(jsonFile);
-
+            JsonNode root = OBJECT_MAPPER.readTree(jsonFile);
             JsonNode timestampNode = root.path("photoTakenTime").path("timestamp");
             if (!timestampNode.isMissingNode()) {
                 long seconds = Long.parseLong(timestampNode.asText());
@@ -172,9 +195,41 @@ public class Analyzer {
             LocalDate startDate = filter.getDate();
             LocalDate endDate = filter.getSecondDate().get();
 
-            // On vérifie simplement si la date du fichier est comprise entre le début et la fin
-            // (On suppose ici que pour un range, on compare la date complète)
-            return !fileDate.isBefore(startDate) && !fileDate.isAfter(endDate);
+            // Si l'année n'est pas cochée dans les paramètres, on ignore l'année pour la comparaison de plage
+            if (!paramList.contains(FilterMode.YEAR)) {
+                int defaultYear = 2000;
+
+                LocalDate fileDateNormalized;
+                try {
+                    fileDateNormalized = fileDate.withYear(defaultYear);
+                } catch (java.time.DateTimeException e) {
+                    fileDateNormalized = fileDate.withMonth(2).withDayOfMonth(28).withYear(defaultYear);
+                }
+
+                LocalDate startDateNormalized;
+                try {
+                    startDateNormalized = startDate.withYear(defaultYear);
+                } catch (java.time.DateTimeException e) {
+                    startDateNormalized = startDate.withMonth(2).withDayOfMonth(28).withYear(defaultYear);
+                }
+
+                LocalDate endDateNormalized;
+                try {
+                    endDateNormalized = endDate.withYear(defaultYear);
+                } catch (java.time.DateTimeException e) {
+                    endDateNormalized = endDate.withMonth(2).withDayOfMonth(28).withYear(defaultYear);
+                }
+
+                // Si la plage de fin est avant le début (ex: du 28 déc au 3 jan normalized dans la même année)
+                if (endDateNormalized.isBefore(startDateNormalized)) {
+                    return !fileDateNormalized.isBefore(startDateNormalized) || !fileDateNormalized.isAfter(endDateNormalized);
+                } else {
+                    return !fileDateNormalized.isBefore(startDateNormalized) && !fileDateNormalized.isAfter(endDateNormalized);
+                }
+            } else {
+                // Si l'année est cochée, on compare la date complète
+                return !fileDate.isBefore(startDate) && !fileDate.isAfter(endDate);
+            }
         }
 
         // 2. Si c'est une date unique (SINGLE_DATE), on garde ta logique avec les paramètres
@@ -197,12 +252,25 @@ public class Analyzer {
 
     /**
      * Moves files into folders based on the specified filter.
+     * @param baseFolder The folder in which the files will be put in after process
      * @param files The list of files to process.
      * @param filter The filter to apply.
      * @throws IOException If a file operation fails.
      */
-    public void putInFolder(List<File> files, Filter filter) throws IOException {
-        File destFolder = new File(filter.getName());
+    public void putInFolder(File baseFolder, List<File> files, Filter filter) throws IOException {
+        putInFolder(baseFolder, files, filter, null);
+    }
+
+    /**
+     * Moves files into folders based on the specified filter, with a progress callback.
+     * @param baseFolder The folder in which the files will be put in after process
+     * @param files The list of files to process.
+     * @param filter The filter to apply.
+     * @param onProgress Callback executed after each file is processed.
+     * @throws IOException If a file operation fails.
+     */
+    public void putInFolder(File baseFolder, List<File> files, Filter filter, Runnable onProgress) throws IOException {
+        File destFolder = new File(baseFolder, filter.getName());
         if (!destFolder.exists()) {
             destFolder.mkdirs();
         }
@@ -212,6 +280,9 @@ public class Analyzer {
             if (compareDates(creationDate, filter)) {
                 File destFile = new File(destFolder, f.getName());
                 Files.move(f.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+            if (onProgress != null) {
+                onProgress.run();
             }
         }
     }
