@@ -4,6 +4,8 @@ out/
 !**/src/main/**/target/
 !**/src/test/**/target/
 .kotlin
+PhotoFilter
+dependency-reduced-pom.xml
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
