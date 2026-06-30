@@ -1,0 +1,4 @@
+./mvnw: line 280: /home/kylian/Projects/PhotoAnalyzer/.mvn/wrapper/maven-wrapper.properties: No such file or directory
+/home/kylian/Projects/PhotoAnalyzer/.mvn/wrapper/maven-wrapper.jar: No such file or directory
+Error: Could not find or load main class org.apache.maven.wrapper.MavenWrapperMain
+Caused by: java.lang.ClassNotFoundException: org.apache.maven.wrapper.MavenWrapperMain
