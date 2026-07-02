@@ -1,6 +1,5 @@
 package fr.kylian.photofilter;
 
-import fr.kylian.photofilter.analyzer.FiltersSaver;
 import fr.kylian.photofilter.filter.FilterMode;
 import fr.kylian.photofilter.filter.Filter;
 import fr.kylian.photofilter.filter.FilterRange;

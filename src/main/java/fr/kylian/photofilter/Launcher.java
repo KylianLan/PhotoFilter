@@ -10,10 +10,6 @@ public class Launcher {
 
         Locale.setDefault(Locale.FRANCE);
 
-            System.out.println("UUID Brut de la machine : " + HardwareUtils.getSystemUUID());
-            System.out.println("HWID Haché (SHA-256) : " + HardwareUtils.generateHWID());
-            System.out.println("Nom de l'appareil : " + HardwareUtils.getDeviceName());
-
-//        Application.launch(PhotoFilterApplication.class, args);
+        Application.launch(PhotoFilterApplication.class, args);
     }
 }

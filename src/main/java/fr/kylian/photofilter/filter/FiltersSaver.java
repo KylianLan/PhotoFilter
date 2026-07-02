@@ -1,14 +1,12 @@
-package fr.kylian.photofilter.analyzer;
+package fr.kylian.photofilter.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import fr.kylian.photofilter.filter.Filter;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Locale;
 
 public class FiltersSaver {
 
