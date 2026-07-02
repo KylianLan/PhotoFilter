@@ -100,6 +100,8 @@ public class PhotoFilterController implements Initializable {
 
         if (selectedFolder != null) {
             this.selectedFolder.setText(selectedFolder.getAbsolutePath());
+        } else {
+            this.selectedFolder.setText("");
         }
 
         this.folder = selectedFolder;
