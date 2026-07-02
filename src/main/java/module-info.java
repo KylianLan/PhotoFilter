@@ -10,6 +10,7 @@ module fr.kylian.photofilter {
     requires com.fasterxml.jackson.datatype.jsr310;
     requires com.github.oshi;
     requires java.net.http;
+    requires java.prefs;
 
     opens fr.kylian.photofilter to javafx.fxml;
     opens fr.kylian.photofilter.filter to com.fasterxml.jackson.databind;
