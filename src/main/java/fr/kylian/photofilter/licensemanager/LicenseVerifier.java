@@ -14,7 +14,7 @@ import java.time.Duration;
 public class LicenseVerifier {
 
     // Remplace par la vraie URL de ton serveur Debian
-    private static final String API_URL = "http://91.170.27.94:50080/API/key-verifier.php";
+    private static final String API_URL = "https://photofilter.fr/API/key-verifier.php";
     private static final ObjectMapper mapper = new ObjectMapper();
 
     /**
