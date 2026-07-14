@@ -89,6 +89,7 @@ public class FiltersController {
      */
     private void addFilterRow(Filter filter) {
         HBox row = new HBox(10);
+        row.getStyleClass().add("filter-row");
         row.setAlignment(Pos.CENTER_LEFT);
         row.setPadding(new Insets(5));
         row.setUserData(filter);
@@ -134,7 +135,7 @@ public class FiltersController {
 
         row.setOnDragEntered(event -> {
             if (event.getGestureSource() != dragHandle && event.getDragboard().hasString()) {
-                row.setStyle("-fx-border-color: #0078d7; -fx-border-width: 2px; -fx-border-style: dashed; -fx-background-color: #e6f2ff;");
+                row.setStyle("-fx-border-color: #0d6efd; -fx-border-width: 1px; -fx-border-style: dashed; -fx-background-color: #0d6efd22;");
             }
             event.consume();
         });
@@ -226,6 +227,7 @@ public class FiltersController {
      */
     private FilterMode[] askFilterParams(FilterMode[] defaultParams) {
         Dialog<FilterMode[]> dialog = new Dialog<>();
+        dialog.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
         dialog.setTitle("Paramètres du filtre");
         dialog.setHeaderText("Étape 1 : Choisissez les éléments de date à utiliser :");
 
@@ -271,6 +273,7 @@ public class FiltersController {
      */
     private FilterRange askFilterRange() {
         ChoiceDialog<FilterRange> dialog = new ChoiceDialog<>(FilterRange.SINGLE_DATE, FilterRange.values());
+        dialog.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
         dialog.setTitle("Filter Range");
         dialog.setHeaderText("Step 2: Choose the filter range:");
         dialog.setContentText("Range type:");
@@ -289,6 +292,7 @@ public class FiltersController {
 
     private LocalDate askDateValues(String title, FilterMode[] params, LocalDate defaultDate) {
         Dialog<LocalDate> dialog = new Dialog<>();
+        dialog.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
         dialog.setTitle(title);
         dialog.setHeaderText("Entrez les valeurs de la date :");
 
@@ -351,6 +355,7 @@ public class FiltersController {
     private String askFilterName(String defaultName) {
         // Le TextInputDialog sera pré-rempli avec defaultName
         TextInputDialog dialog = new TextInputDialog(defaultName);
+        dialog.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
         dialog.setTitle("Nom du filtre");
         dialog.setHeaderText("Entrez un nom pour ce filtre :");
         dialog.setContentText("Nom :");
@@ -370,6 +375,7 @@ public class FiltersController {
         }
 
         Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION, "Voulez-vous vraiment supprimer ce filtre ?", ButtonType.YES, ButtonType.NO);
+        confirmation.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
         confirmation.setTitle("Suppression du filtre");
 
         confirmation.showAndWait();
@@ -439,6 +445,7 @@ public class FiltersController {
      */
     private void showAlert(String title, String content, Alert.AlertType type) {
         Alert alert = new Alert(type);
+        alert.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);

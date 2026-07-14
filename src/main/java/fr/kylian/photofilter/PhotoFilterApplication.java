@@ -5,9 +5,11 @@ import fr.kylian.photofilter.licensemanager.LicenseStorage;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -39,6 +41,7 @@ public class PhotoFilterApplication extends Application {
 
     private void promptForKey(Stage mainStage) {
         TextInputDialog dialog = new TextInputDialog();
+        dialog.getDialogPane().getStylesheets().add(PhotoFilterApplication.class.getResource("style.css").toExternalForm());
         dialog.setTitle("Vérification de la licence");
         dialog.setHeaderText("Une clé de licence est requise pour utiliser PhotoFilter.");
         dialog.setContentText("Veuillez entrer votre clé de licence :");
@@ -70,6 +73,7 @@ public class PhotoFilterApplication extends Application {
                     
                     if (!isSavedKey) {
                         Alert success = new Alert(Alert.AlertType.INFORMATION);
+                        success.getDialogPane().getStylesheets().add(PhotoFilterApplication.class.getResource("style.css").toExternalForm());
                         success.setTitle("Licence valide");
                         success.setHeaderText(null);
                         success.setContentText("Votre clé de licence a été validée avec succès !");
@@ -93,11 +97,28 @@ public class PhotoFilterApplication extends Application {
     private void showMainApp(Stage stage) {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(PhotoFilterApplication.class.getResource("PhotoFilter.fxml"));
-            Scene scene = new Scene(fxmlLoader.load(), 600, 400);
+            Parent root = fxmlLoader.load();
+            
+            PhotoFilterController controller = fxmlLoader.getController();
+            controller.setHostServices(getHostServices());
+            
+            Scene scene = new Scene(root, 600, 400);
             stage.setTitle("PhotoFilter");
             stage.setScene(scene);
-            stage.setResizable(false);
+            stage.setResizable(true);
+
+            stage.setOnShown(e -> {
+                stage.setMinWidth(stage.getWidth());
+                stage.setMinHeight(stage.getHeight());
+            });
+
             stage.show();
+
+            KeyboardController keyboardController = new KeyboardController();
+
+            stage.addEventHandler(KeyEvent.KEY_PRESSED, e -> {
+                keyboardController.onKeyPressed(e.getCode());
+            });
             
             // Réactive la fermeture automatique de JavaFX quand on ferme cette fenêtre principale
             Platform.setImplicitExit(true);
@@ -110,6 +131,7 @@ public class PhotoFilterApplication extends Application {
 
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.getDialogPane().getStylesheets().add(PhotoFilterApplication.class.getResource("style.css").toExternalForm());
         alert.setTitle("Erreur de licence");
         alert.setHeaderText(null);
         alert.setContentText(message);

@@ -4,6 +4,7 @@ import fr.kylian.photofilter.analyzer.Analyzer;
 import fr.kylian.photofilter.filter.FiltersSaver;
 import fr.kylian.photofilter.filter.FilterMode;
 import fr.kylian.photofilter.filter.Filter;
+import javafx.application.HostServices;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -39,10 +40,15 @@ public class PhotoFilterController implements Initializable {
     @FXML private MenuItem help;
     @FXML private MenuItem about;
 
+    private static HostServices hostServices;
     private ObservableList<Filter> filters;
     private File folder;
 
     private final FiltersSaver filtersSaver = new FiltersSaver();
+
+    public void setHostServices(HostServices hostServices) {
+        this.hostServices = hostServices;
+    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -65,12 +71,33 @@ public class PhotoFilterController implements Initializable {
 
         about.setOnAction(e -> {
             Alert dialog = new Alert(Alert.AlertType.INFORMATION);
+            dialog.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
             dialog.setTitle("À propos");
             dialog.setHeaderText("Copyright");
             dialog.setContentText("© 2026 Kylian Langlois.\nTous droits réservés.");
 
             dialog.showAndWait();
         });
+
+        help.setOnAction(e -> {
+            this.openDoc();
+        });
+    }
+
+    public static void openDoc() {
+        if (hostServices != null) {
+            hostServices.showDocument("https://photofilter.fr/documentation/");
+        } else {
+            try {
+                if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.BROWSE)) {
+                    java.awt.Desktop.getDesktop().browse(new java.net.URI("https://photofilter.fr/documentation/"));
+                } else {
+                    Runtime.getRuntime().exec("xdg-open https://photofilter.fr/documentation/");
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 
     private void updateEnabledFiltersTextArea() {
@@ -121,7 +148,13 @@ public class PhotoFilterController implements Initializable {
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.initOwner(folderSelect.getScene().getWindow());
             stage.setScene(new Scene(root));
-            stage.setResizable(false);
+            stage.setResizable(true);
+
+            stage.setOnShown(e -> {
+                stage.setMinWidth(stage.getWidth());
+                stage.setMinHeight(stage.getHeight());
+            });
+
             stage.showAndWait();
 
             // Save filters whenever the window is closed (by button or window cross)
@@ -136,6 +169,7 @@ public class PhotoFilterController implements Initializable {
     private void startFiltering() {
         if (folder == null) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
             alert.setTitle("Dossier manquant");
             alert.setHeaderText(null);
             alert.setContentText("Veuillez choisir un dossier source contenant les photos à filtrer.");
@@ -194,6 +228,7 @@ public class PhotoFilterController implements Initializable {
             progressBar.setProgress(1.0);
             start.setDisable(false);
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
             alert.setTitle("Terminé");
             alert.setHeaderText(null);
             alert.setContentText("Le filtrage est terminé !");
@@ -208,6 +243,7 @@ public class PhotoFilterController implements Initializable {
             System.err.println("Error while filtering files:\n\t" + exception.getMessage());
             exception.printStackTrace();
             Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
             alert.setTitle("Erreur");
             alert.setHeaderText(null);
             alert.setContentText("Une erreur s'est produite lors du filtrage : " + exception.getMessage());
