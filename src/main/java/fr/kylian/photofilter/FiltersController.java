@@ -20,6 +20,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.lang.reflect.Array;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Optional;
@@ -228,7 +229,7 @@ public class FiltersController {
     private FilterMode[] askFilterParams(FilterMode[] defaultParams) {
         Dialog<FilterMode[]> dialog = new Dialog<>();
         dialog.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-        dialog.setTitle("Paramètres du filtre");
+        dialog.setTitle("Paramètres du Filtre");
         dialog.setHeaderText("Étape 1 : Choisissez les éléments de date à utiliser :");
 
         List<FilterMode> defaultList = defaultParams != null ? Arrays.asList(defaultParams) : new ArrayList<>();
@@ -272,14 +273,22 @@ public class FiltersController {
      * Shows a dialog to select the filter range (Single Date or Range).
      */
     private FilterRange askFilterRange() {
-        ChoiceDialog<FilterRange> dialog = new ChoiceDialog<>(FilterRange.SINGLE_DATE, FilterRange.values());
+        ChoiceDialog<String> dialog = new ChoiceDialog<>("Date simple", "Date simple", "Intervalle");
         dialog.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-        dialog.setTitle("Filter Range");
-        dialog.setHeaderText("Step 2: Choose the filter range:");
+        dialog.setTitle("Type de Filtre");
+        dialog.setHeaderText("Étape 2 : Choisissez un type de Filtre :");
         dialog.setContentText("Range type:");
 
-        Optional<FilterRange> result = dialog.showAndWait();
-        return result.orElse(null);
+        Optional<String> resultOpt = dialog.showAndWait();
+        if (resultOpt.isEmpty()) {
+            return null;
+        }
+        String resultat = resultOpt.get();
+        if ("Date simple".equals(resultat)) {
+            return FilterRange.SINGLE_DATE;
+        } else {
+            return FilterRange.RANGE;
+        }
     }
 
     /**
@@ -294,7 +303,7 @@ public class FiltersController {
         Dialog<LocalDate> dialog = new Dialog<>();
         dialog.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
         dialog.setTitle(title);
-        dialog.setHeaderText("Entrez les valeurs de la date :");
+        dialog.setHeaderText("Étape 3 : Entrez les valeurs de la date :");
 
         GridPane grid = new GridPane();
         grid.setHgap(10);
@@ -356,8 +365,8 @@ public class FiltersController {
         // Le TextInputDialog sera pré-rempli avec defaultName
         TextInputDialog dialog = new TextInputDialog(defaultName);
         dialog.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-        dialog.setTitle("Nom du filtre");
-        dialog.setHeaderText("Entrez un nom pour ce filtre :");
+        dialog.setTitle("Nom du Filtre");
+        dialog.setHeaderText("Étape 4 : Entrez un nom pour ce Filtre :");
         dialog.setContentText("Nom :");
 
         return dialog.showAndWait().orElse(null);
@@ -370,13 +379,13 @@ public class FiltersController {
     void removeSelectedFilter() {
         ToggleButton selectedBtn = (ToggleButton) selectionGroup.getSelectedToggle();
         if (selectedBtn == null) {
-            showAlert("Info", "Select a filter by clicking its name before deleting.", Alert.AlertType.INFORMATION);
+            showAlert("Info", "Sélectionnez un Filtre en cliquant sur son nom avant de le supprimer.", Alert.AlertType.INFORMATION);
             return;
         }
 
-        Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION, "Voulez-vous vraiment supprimer ce filtre ?", ButtonType.YES, ButtonType.NO);
+        Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION, "Voulez-vous vraiment supprimer ce Filtre ?", ButtonType.YES, ButtonType.NO);
         confirmation.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-        confirmation.setTitle("Suppression du filtre");
+        confirmation.setTitle("Suppression du Filtre");
 
         confirmation.showAndWait();
 
@@ -393,7 +402,7 @@ public class FiltersController {
     void editSelectedFilter() {
         ToggleButton selectedBtn = (ToggleButton) selectionGroup.getSelectedToggle();
         if (selectedBtn == null) {
-            showAlert("Info", "Sélectionnez un filtre en cliquant sur son nom avant de le modifier.", Alert.AlertType.INFORMATION);
+            showAlert("Info", "Sélectionnez un Filtre en cliquant sur son nom avant de le modifier.", Alert.AlertType.INFORMATION);
             return;
         }
 
