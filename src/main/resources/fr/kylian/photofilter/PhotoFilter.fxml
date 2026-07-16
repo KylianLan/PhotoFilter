@@ -24,6 +24,7 @@
           <Menu mnemonicParsing="false" text="_Fichier">
             <items>
               <MenuItem mnemonicParsing="false" onAction="#selectFolder" text="Charger" />
+                  <MenuItem mnemonicParsing="false" onAction="#changeLicense" text="Changer de licence" />
             </items>
           </Menu>
           <Menu mnemonicParsing="false" text="_Aide">

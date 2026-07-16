@@ -17,6 +17,16 @@ public class LicenseVerifier {
     private static final String API_URL = "https://photofilter.fr/API/key-verifier.php";
     private static final ObjectMapper mapper = new ObjectMapper();
 
+    private static boolean trialMode = false;
+
+    public static boolean isTrialMode() {
+        return trialMode;
+    }
+
+    public static void setTrialMode(boolean trial) {
+        trialMode = trial;
+    }
+
     /**
      * Vérifie la clé de licence auprès de l'API.
      * @param licenseKey La clé entrée par l'utilisateur

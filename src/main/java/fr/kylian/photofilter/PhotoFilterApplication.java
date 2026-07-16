@@ -50,8 +50,15 @@ public class PhotoFilterApplication extends Application {
         if (result.isPresent()) {
             String key = result.get().trim();
             if (key.isEmpty()) {
-                showError("La clé de licence ne peut pas être vide.");
-                promptForKey(mainStage); // On redemande récursivement
+                Alert trialAlert = new Alert(Alert.AlertType.INFORMATION);
+                trialAlert.getDialogPane().getStylesheets().add(PhotoFilterApplication.class.getResource("style.css").toExternalForm());
+                trialAlert.setTitle("Mode d'essai");
+                trialAlert.setHeaderText(null);
+                trialAlert.setContentText("Vous entrez en mode d'essai. La création est limitée à 2 filtres.");
+                trialAlert.showAndWait();
+
+                LicenseVerifier.setTrialMode(true);
+                showMainApp(mainStage);
                 return;
             }
 
