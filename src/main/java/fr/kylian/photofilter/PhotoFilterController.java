@@ -17,6 +17,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -57,6 +60,8 @@ public class PhotoFilterController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         filters = FXCollections.observableArrayList();
+
+        start.setDisable(true);
 
         // Load saved filters on startup
         Filter[] savedFilters = filtersSaver.loadFilters();
@@ -139,8 +144,12 @@ public class PhotoFilterController implements Initializable {
 
         if (selectedFolder != null) {
             this.selectedFolder.setText(selectedFolder.getAbsolutePath());
+
+            start.setDisable(false);
         } else {
-            this.selectedFolder.setText("");
+            this.selectedFolder.setText("Aucun dossier sélectionné");
+
+            start.setDisable(true);
         }
 
         this.folder = selectedFolder;
@@ -324,5 +333,39 @@ public class PhotoFilterController implements Initializable {
 
         progressBar.progressProperty().bind(task.progressProperty());
         new Thread(task).start();
+    }
+
+    @FXML
+    private void handleDragOver(DragEvent event) {
+        if (event.getDragboard().hasFiles()) {
+            event.acceptTransferModes(TransferMode.ANY);
+        }
+    }
+
+    @FXML
+    private void handleDragDropped(DragEvent event) {
+        Dragboard db = event.getDragboard();
+        boolean success = false;
+
+        if (db.hasFiles()) {
+            File dossierSelectionne = db.getFiles().get(0);
+
+            if (dossierSelectionne.isDirectory()) {
+                String cheminDossier = dossierSelectionne.getAbsolutePath();
+
+                selectedFolder.setText(cheminDossier);
+                this.folder = dossierSelectionne;
+
+                success = true;
+            } else {
+                selectedFolder.setText("Aucun dossier sélectionné");
+                this.folder = null;
+            }
+        }
+
+        start.setDisable(!success);
+
+        event.setDropCompleted(success);
+        event.consume();
     }
 }

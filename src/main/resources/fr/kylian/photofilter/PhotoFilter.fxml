@@ -54,12 +54,12 @@
              <Button fx:id="folderSelect" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#selectFolder" text="Choisir un dossier" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.valignment="CENTER" />
              <VBox alignment="CENTER" spacing="20.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                 <children>
-                   <Button fx:id="start" mnemonicParsing="false" onAction="#startFiltering" prefWidth="120.0" styleClass="button-primary" text="Filtrer" />
+                   <Button fx:id="start" mnemonicParsing="false" onAction="#startFiltering" prefWidth="120.0" styleClass="button-primary" text="Lancer le tri" />
                    <ProgressBar fx:id="progressBar" prefWidth="150.0" progress="0.0" />
                 </children>
              </VBox>
-             <TextArea fx:id="selectedFolder" editable="false" focusTraversable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="216.0" prefWidth="220.0" wrapText="true" GridPane.rowIndex="1" />
-             <Button mnemonicParsing="false" onAction="#openFiltersHandler" prefHeight="24.0" text="Filtres" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.valignment="CENTER" />
+             <TextArea fx:id="selectedFolder" editable="false" focusTraversable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" onDragDropped="#handleDragDropped" onDragOver="#handleDragOver" prefHeight="216.0" prefWidth="220.0" text="Aucun dossier sélectionné" wrapText="true" GridPane.rowIndex="1" />
+             <Button mnemonicParsing="false" onAction="#openFiltersHandler" prefHeight="24.0" text="Gérer les filtres" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.valignment="CENTER" />
              <TextArea fx:id="enabledFilters" editable="false" focusTraversable="false" layoutX="10.0" layoutY="197.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="216.0" prefWidth="220.0" wrapText="true" GridPane.columnIndex="2" GridPane.rowIndex="1" />
           </children>
       </GridPane>
