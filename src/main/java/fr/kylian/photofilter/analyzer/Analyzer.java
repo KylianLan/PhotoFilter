@@ -279,7 +279,32 @@ public class Analyzer {
             LocalDate creationDate = getFileCreationDate(f);
             if (compareDates(creationDate, filter)) {
                 File destFile = new File(destFolder, f.getName());
-                Files.move(f.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                if (destFile.exists()) {
+                    if (Files.mismatch(f.toPath(), destFile.toPath()) == -1L) {
+                        // The files are identical; delete the source file to complete the move without duplicating
+                        Files.delete(f.toPath());
+                    } else {
+                        // The files are different; find a unique name
+                        String name = f.getName();
+                        String baseName = name;
+                        String extension = "";
+                        int dotIndex = name.lastIndexOf('.');
+                        if (dotIndex > 0) {
+                            baseName = name.substring(0, dotIndex);
+                            extension = name.substring(dotIndex);
+                        }
+
+                        int counter = 1;
+                        File uniqueDestFile = destFile;
+                        while (uniqueDestFile.exists()) {
+                            uniqueDestFile = new File(destFolder, baseName + " (" + counter + ")" + extension);
+                            counter++;
+                        }
+                        Files.move(f.toPath(), uniqueDestFile.toPath());
+                    }
+                } else {
+                    Files.move(f.toPath(), destFile.toPath());
+                }
             }
             if (onProgress != null) {
                 onProgress.run();
