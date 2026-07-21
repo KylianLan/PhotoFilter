@@ -119,6 +119,29 @@ public class PhotoFilterApplication extends Application {
                 stage.setMinHeight(stage.getHeight());
             });
 
+            stage.setOnCloseRequest(e -> {
+                if (controller != null && controller.isTaskRunning()) {
+                    Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+                    confirmAlert.getDialogPane().getStylesheets().add(PhotoFilterApplication.class.getResource("style.css").toExternalForm());
+                    confirmAlert.setTitle("Opération en cours");
+                    confirmAlert.setHeaderText("Un traitement est actuellement en cours.");
+                    confirmAlert.setContentText("Voulez-vous vraiment annuler l'opération et quitter PhotoFilter ?");
+
+                    Optional<javafx.scene.control.ButtonType> result = confirmAlert.showAndWait();
+                    if (result.isPresent() && result.get() == javafx.scene.control.ButtonType.OK) {
+                        controller.cancelRunningTasks();
+                        Platform.exit();
+                        System.exit(0);
+                    } else {
+                        // L'utilisateur a annulé : on consomme l'événement pour empêcher la fermeture
+                        e.consume();
+                    }
+                } else {
+                    Platform.exit();
+                    System.exit(0);
+                }
+            });
+
             stage.show();
 
             KeyboardController keyboardController = new KeyboardController();

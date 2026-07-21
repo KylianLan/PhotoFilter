@@ -51,8 +51,28 @@ public class PhotoFilterController implements Initializable {
     private static HostServices hostServices;
     private ObservableList<Filter> filters;
     private File folder;
+    private javafx.concurrent.Task<?> activeTask;
 
     private final FiltersSaver filtersSaver = new FiltersSaver();
+
+    public boolean isTaskRunning() {
+        return activeTask != null && activeTask.isRunning();
+    }
+
+    public void cancelRunningTasks() {
+        if (activeTask != null && activeTask.isRunning()) {
+            activeTask.cancel(true);
+        }
+    }
+
+    private void resetProgressBarDelayed() {
+        javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(3));
+        pause.setOnFinished(e -> {
+            progressBar.progressProperty().unbind();
+            progressBar.setProgress(0.0);
+        });
+        pause.play();
+    }
 
     public void setHostServices(HostServices hostServices) {
         this.hostServices = hostServices;
@@ -167,6 +187,9 @@ public class PhotoFilterController implements Initializable {
                 protected Void call() throws Exception {
                     Analyzer analyzer = new Analyzer();
                     analyzer.decompressArchive(input, extractDir, (bytesRead, totalBytes) -> {
+                        if (isCancelled()) {
+                            return;
+                        }
                         if (totalBytes > 0) {
                             updateProgress(bytesRead, totalBytes);
                         }
@@ -175,6 +198,8 @@ public class PhotoFilterController implements Initializable {
                 }
             };
 
+            activeTask = decompressTask;
+
             decompressTask.setOnSucceeded(e -> {
                 progressBar.progressProperty().unbind();
                 progressBar.setProgress(1.0);
@@ -182,6 +207,15 @@ public class PhotoFilterController implements Initializable {
                 start.setDisable(false);
                 this.folder = extractDir;
                 selectedFolder.setText("Archive extraite dans :\n" + extractDir.getAbsolutePath());
+
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+                alert.setTitle("Extraction terminée");
+                alert.setHeaderText(null);
+                alert.setContentText("L'archive '" + input.getName() + "' a été décompressée avec succès !");
+                alert.showAndWait();
+
+                resetProgressBarDelayed();
             });
 
             decompressTask.setOnFailed(e -> {
@@ -202,7 +236,9 @@ public class PhotoFilterController implements Initializable {
             });
 
             progressBar.progressProperty().bind(decompressTask.progressProperty());
-            new Thread(decompressTask).start();
+            Thread thread = new Thread(decompressTask);
+            thread.setDaemon(true);
+            thread.start();
             return true;
         } else {
             this.selectedFolder.setText("Fichier non supporté (sélectionnez un dossier ou une archive)");
@@ -348,7 +384,6 @@ public class PhotoFilterController implements Initializable {
 
             stage.showAndWait();
 
-            // Save filters whenever the window is closed (by button or window cross)
             filtersSaver.saveFilters(filters.toArray(new Filter[0]));
             updateEnabledFiltersTextArea();
         } catch (IOException e) {
@@ -377,35 +412,35 @@ public class PhotoFilterController implements Initializable {
 
         File destination = destSelection.showDialog(stage);
         if (destination == null) {
-            return; // L'utilisateur a annulé la sélection
+            return;
         }
-
-        System.out.println("Source: " + folder.getAbsolutePath());
-        System.out.println("Destination: " + destination.getAbsolutePath());
-        System.out.println("Filters: " + filters);
 
         start.setDisable(true);
         progressBar.setProgress(0.0);
 
-        javafx.concurrent.Task<Void> task = new javafx.concurrent.Task<Void>() {
+        javafx.concurrent.Task<Void> filterTask = new javafx.concurrent.Task<Void>() {
             @Override
             protected Void call() throws Exception {
                 Analyzer analyzer = new Analyzer();
                 List<File> files = analyzer.getFiles(folder);
 
                 int count = files.size();
-                System.out.println("Fichiers trouvés: " + count);
-                
                 long enabledCount = filters.stream().filter(Filter::isEnabled).count();
                 int totalWork = (int) (count * enabledCount);
                 int[] workDone = {0};
 
                 Runnable onProgress = () -> {
+                    if (isCancelled()) {
+                        return;
+                    }
                     workDone[0]++;
                     updateProgress(workDone[0], totalWork);
                 };
 
                 for (Filter filter : filters) {
+                    if (isCancelled()) {
+                        break;
+                    }
                     if (filter.isEnabled()) {
                         analyzer.putInFolder(destination, files, filter, onProgress);
                     }
@@ -414,7 +449,9 @@ public class PhotoFilterController implements Initializable {
             }
         };
 
-        task.setOnSucceeded(e -> {
+        activeTask = filterTask;
+
+        filterTask.setOnSucceeded(e -> {
             progressBar.progressProperty().unbind();
             progressBar.setProgress(1.0);
             start.setDisable(false);
@@ -424,14 +461,14 @@ public class PhotoFilterController implements Initializable {
             alert.setHeaderText(null);
             alert.setContentText("Le filtrage est terminé !");
             alert.showAndWait();
+            resetProgressBarDelayed();
         });
 
-        task.setOnFailed(e -> {
+        filterTask.setOnFailed(e -> {
             progressBar.progressProperty().unbind();
             progressBar.setProgress(0.0);
             start.setDisable(false);
-            Throwable exception = task.getException();
-            System.err.println("Error while filtering files:\n\t" + exception.getMessage());
+            Throwable exception = filterTask.getException();
             exception.printStackTrace();
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
@@ -441,7 +478,9 @@ public class PhotoFilterController implements Initializable {
             alert.showAndWait();
         });
 
-        progressBar.progressProperty().bind(task.progressProperty());
-        new Thread(task).start();
+        progressBar.progressProperty().bind(filterTask.progressProperty());
+        Thread thread = new Thread(filterTask);
+        thread.setDaemon(true);
+        thread.start();
     }
 }
