@@ -11,6 +11,7 @@ module fr.kylian.photofilter {
     requires com.github.oshi;
     requires java.net.http;
     requires java.prefs;
+    requires org.apache.commons.compress;
 
     opens fr.kylian.photofilter to javafx.fxml;
     opens fr.kylian.photofilter.filter to com.fasterxml.jackson.databind;

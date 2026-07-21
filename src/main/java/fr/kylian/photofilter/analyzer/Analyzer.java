@@ -5,20 +5,25 @@ import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.exif.ExifSubIFDDirectory;
 
-import java.io.IOException;
-import java.io.File;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.zip.GZIPOutputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.kylian.photofilter.filter.Filter;
 import fr.kylian.photofilter.filter.FilterMode;
 import fr.kylian.photofilter.filter.FilterRange;
+import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry;
+import org.apache.commons.compress.archivers.sevenz.SevenZFile;
 
 /**
  * Core logic for analyzing photo/video metadata and organizing files.
@@ -93,6 +98,96 @@ public class Analyzer {
         }
 
         return files;
+    }
+
+    /**
+     * Extracts an archive file into the target directory.
+     * @param archive The archive file to extract.
+     * @param targetDir The destination directory.
+     * @return List of extracted files.
+     * @throws IOException If an I/O error occurs or if a file path is insecure (Zip Slip vulnerability).
+     */
+    public List<File> decompressArchive(final File archive, File targetDir) throws IOException {
+        List<File> extractedFiles = new ArrayList<>();
+        String name = archive.getName().toLowerCase();
+        byte[] buffer = new byte[8192];
+
+        if (name.endsWith(".zip")) {
+            try (ZipInputStream zis = new ZipInputStream(new FileInputStream(archive))) {
+                ZipEntry zipEntry = zis.getNextEntry();
+                while (zipEntry != null) {
+                    File newFile = new File(targetDir, zipEntry.getName());
+                    
+                    // Sécurité contre la vulnérabilité Zip Slip (recherche de ../ dans les noms)
+                    String canonicalTargetDir = targetDir.getCanonicalPath();
+                    String canonicalNewFile = newFile.getCanonicalPath();
+                    if (!canonicalNewFile.startsWith(canonicalTargetDir + File.separator) && !canonicalNewFile.equals(canonicalTargetDir)) {
+                        throw new IOException("Fichier ZIP malveillant (Zip Slip détecté) : " + zipEntry.getName());
+                    }
+
+                    if (zipEntry.isDirectory()) {
+                        if (!newFile.isDirectory() && !newFile.mkdirs()) {
+                            throw new IOException("Impossible de créer le dossier : " + newFile);
+                        }
+                    } else {
+                        File parent = newFile.getParentFile();
+                        if (parent != null && !parent.isDirectory() && !parent.mkdirs()) {
+                            throw new IOException("Impossible de créer le dossier parent : " + parent);
+                        }
+
+                        try (FileOutputStream fos = new FileOutputStream(newFile)) {
+                            int len;
+                            while ((len = zis.read(buffer)) > 0) {
+                                fos.write(buffer, 0, len);
+                            }
+                        }
+                        
+                        // Si le fichier extrait est une image ou une vidéo, on l'ajoute à la liste
+                        if (isImage(newFile) || isVideo(newFile)) {
+                            extractedFiles.add(newFile);
+                        }
+                    }
+                    zis.closeEntry();
+                    zipEntry = zis.getNextEntry();
+                }
+            }
+        } else if (name.endsWith(".7z")) {
+            try (SevenZFile sevenZFile = SevenZFile.builder().setFile(archive).get()) {
+                SevenZArchiveEntry entry = sevenZFile.getNextEntry();
+
+                while (entry != null) {
+                    File newFile = new File(targetDir, entry.getName());
+
+                    if (entry.isDirectory()) {
+                        if (!newFile.isDirectory() && !newFile.mkdirs()) {
+                            throw new IOException("Impossible de créer le dossier : " + newFile);
+                        }
+                    } else {
+                        File parent = newFile.getParentFile();
+                        if (parent != null && !parent.isDirectory() && !parent.mkdirs()) {
+                            throw new IOException("Impossible de créer le dossier parent : " + parent);
+                        }
+
+                        try (FileOutputStream fos = new FileOutputStream(newFile)) {
+                            int len;
+                            while ((len = sevenZFile.read(buffer)) > 0) {
+                                fos.write(buffer, 0, len);
+                            }
+                        }
+                        if (isImage(newFile) || isVideo(newFile)) {
+                            extractedFiles.add(newFile);
+                        }
+                    }
+                    entry = sevenZFile.getNextEntry();
+                }
+            }
+        } else if (name.endsWith(".tar.gz") || name.endsWith(".tgz")) {
+            // Extension possible avec Apache Commons Compress (TarArchiveInputStream)
+        } else if (name.endsWith(".rar")) {
+            // Extension possible avec Junrar
+        }
+
+        return extractedFiles;
     }
 
     /**
