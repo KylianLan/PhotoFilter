@@ -126,16 +126,17 @@ public class Analyzer {
     }
 
     /**
-     * Extracts an archive file into the target directory.
+     * Extracts an archive file into the target directory, notifying progress via callback (bytesRead, totalBytes).
      * @param archive The archive file to extract.
      * @param targetDir The destination directory.
-     * @return List of extracted files.
+     * @param onProgress Callback receiving (bytesRead, totalBytes).
      * @throws IOException If an I/O error occurs or if a file path is insecure (Zip Slip vulnerability).
      */
-    public List<File> decompressArchive(final File archive, File targetDir) throws IOException, RarException {
-        List<File> extractedFiles = new ArrayList<>();
+    public void decompressArchive(final File archive, File targetDir, java.util.function.BiConsumer<Long, Long> onProgress) throws IOException, RarException {
         String name = archive.getName().toLowerCase();
         byte[] buffer = new byte[8192];
+        long totalBytes = archive.length();
+        long[] bytesRead = {0};
 
         if (name.endsWith(".zip")) {
             try (ZipInputStream zis = new ZipInputStream(new FileInputStream(archive))) {
@@ -158,11 +159,11 @@ public class Analyzer {
                             int len;
                             while ((len = zis.read(buffer)) > 0) {
                                 fos.write(buffer, 0, len);
+                                bytesRead[0] += len;
+                                if (onProgress != null) {
+                                    onProgress.accept(bytesRead[0], totalBytes);
+                                }
                             }
-                        }
-                        
-                        if (isImage(newFile) || isVideo(newFile)) {
-                            extractedFiles.add(newFile);
                         }
                     }
                     zis.closeEntry();
@@ -190,10 +191,11 @@ public class Analyzer {
                             int len;
                             while ((len = sevenZFile.read(buffer)) > 0) {
                                 fos.write(buffer, 0, len);
+                                bytesRead[0] += len;
+                                if (onProgress != null) {
+                                    onProgress.accept(bytesRead[0], totalBytes);
+                                }
                             }
-                        }
-                        if (isImage(newFile) || isVideo(newFile)) {
-                            extractedFiles.add(newFile);
                         }
                     }
                     entry = sevenZFile.getNextEntry();
@@ -223,10 +225,11 @@ public class Analyzer {
                             int len;
                             while ((len = tais.read(buffer)) > 0) {
                                 fos.write(buffer, 0, len);
+                                bytesRead[0] += len;
+                                if (onProgress != null) {
+                                    onProgress.accept(bytesRead[0], totalBytes);
+                                }
                             }
-                        }
-                        if (isImage(newFile) || isVideo(newFile)) {
-                            extractedFiles.add(newFile);
                         }
                     }
                     entry = tais.getNextEntry();
@@ -254,16 +257,19 @@ public class Analyzer {
                         try (FileOutputStream fos = new FileOutputStream(newFile)) {
                             rarArchive.extractFile(fileHeader, fos);
                         }
-                        if (isImage(newFile) || isVideo(newFile)) {
-                            extractedFiles.add(newFile);
+                        bytesRead[0] += fileHeader.getUnpSize();
+                        if (onProgress != null) {
+                            onProgress.accept(bytesRead[0], totalBytes);
                         }
                     }
                     fileHeader = rarArchive.nextFileHeader();
                 }
             }
         }
+    }
 
-        return extractedFiles;
+    public void decompressArchive(final File archive, File targetDir) throws IOException, RarException {
+        decompressArchive(archive, targetDir, null);
     }
 
     /**

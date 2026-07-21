@@ -1,5 +1,6 @@
 package fr.kylian.photofilter;
 
+import com.github.junrar.exception.RarException;
 import fr.kylian.photofilter.analyzer.Analyzer;
 import fr.kylian.photofilter.filter.FiltersSaver;
 import fr.kylian.photofilter.filter.FilterMode;
@@ -128,31 +129,140 @@ public class PhotoFilterController implements Initializable {
         enabledFilters.setText(sb.toString());
     }
 
+    private boolean isArchive(File file) {
+        if (file == null || file.isDirectory()) return false;
+        String name = file.getName().toLowerCase();
+        return name.endsWith(".zip") || name.endsWith(".7z") ||
+               name.endsWith(".rar") || name.endsWith(".tar.gz") ||
+               name.endsWith(".tgz");
+    }
+
+    private boolean processSelectedInput(File input) {
+        if (input == null || !input.exists()) {
+            this.selectedFolder.setText("Aucun dossier sélectionné");
+            this.folder = null;
+            return false;
+        }
+
+        if (input.isDirectory()) {
+            this.folder = input;
+            this.selectedFolder.setText(input.getAbsolutePath());
+            start.setDisable(false);
+            return true;
+        } else if (isArchive(input)) {
+            String baseName = input.getName();
+            int dotIndex = baseName.lastIndexOf('.');
+            if (dotIndex > 0) {
+                baseName = baseName.substring(0, dotIndex);
+            }
+            File extractDir = new File(input.getParentFile(), baseName + "_extracted");
+
+            folderSelect.setDisable(true);
+            start.setDisable(true);
+            selectedFolder.setText("Décompression de " + input.getName() + " en cours...");
+            progressBar.setProgress(0.0);
+
+            javafx.concurrent.Task<Void> decompressTask = new javafx.concurrent.Task<Void>() {
+                @Override
+                protected Void call() throws Exception {
+                    Analyzer analyzer = new Analyzer();
+                    analyzer.decompressArchive(input, extractDir, (bytesRead, totalBytes) -> {
+                        if (totalBytes > 0) {
+                            updateProgress(bytesRead, totalBytes);
+                        }
+                    });
+                    return null;
+                }
+            };
+
+            decompressTask.setOnSucceeded(e -> {
+                progressBar.progressProperty().unbind();
+                progressBar.setProgress(1.0);
+                folderSelect.setDisable(false);
+                start.setDisable(false);
+                this.folder = extractDir;
+                selectedFolder.setText("Archive extraite dans :\n" + extractDir.getAbsolutePath());
+            });
+
+            decompressTask.setOnFailed(e -> {
+                progressBar.progressProperty().unbind();
+                progressBar.setProgress(0.0);
+                folderSelect.setDisable(false);
+                start.setDisable(true);
+                Throwable ex = decompressTask.getException();
+                ex.printStackTrace();
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+                alert.setTitle("Erreur de décompression");
+                alert.setHeaderText(null);
+                alert.setContentText("Impossible d'extraire l'archive : " + ex.getMessage());
+                alert.showAndWait();
+                selectedFolder.setText("Erreur d'extraction d'archive");
+                this.folder = null;
+            });
+
+            progressBar.progressProperty().bind(decompressTask.progressProperty());
+            new Thread(decompressTask).start();
+            return true;
+        } else {
+            this.selectedFolder.setText("Fichier non supporté (sélectionnez un dossier ou une archive)");
+            this.folder = null;
+            start.setDisable(true);
+            return false;
+        }
+    }
+
     @FXML
     void selectFolder(ActionEvent event) {
         Stage stage = (Stage) folderSelect.getScene().getWindow();
 
-        DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setTitle("Choisissez un dossier");
+        javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+        fileChooser.setTitle("Choisir une archive (.zip, .7z, .rar) ou annuler pour choisir un dossier");
+        fileChooser.getExtensionFilters().addAll(
+            new javafx.stage.FileChooser.ExtensionFilter("Archives supportées", "*.zip", "*.7z", "*.rar", "*.tar.gz", "*.tgz"),
+            new javafx.stage.FileChooser.ExtensionFilter("Tous les fichiers", "*.*")
+        );
 
         File initialFolder = new File(System.getProperty("user.home"));
         if (initialFolder.exists()) {
-            directoryChooser.setInitialDirectory(initialFolder);
+            fileChooser.setInitialDirectory(initialFolder);
         }
 
-        File selectedFolder = directoryChooser.showDialog(stage);
+        File selectedFile = fileChooser.showOpenDialog(stage);
 
-        if (selectedFolder != null) {
-            this.selectedFolder.setText(selectedFolder.getAbsolutePath());
-
-            start.setDisable(false);
-        } else {
-            this.selectedFolder.setText("Aucun dossier sélectionné");
-
-            start.setDisable(true);
+        if (selectedFile == null) {
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setTitle("Choisir un dossier d'images");
+            if (initialFolder.exists()) {
+                directoryChooser.setInitialDirectory(initialFolder);
+            }
+            selectedFile = directoryChooser.showDialog(stage);
         }
 
-        this.folder = selectedFolder;
+        boolean success = processSelectedInput(selectedFile);
+        start.setDisable(!success);
+    }
+
+    @FXML
+    private void handleDragOver(DragEvent event) {
+        if (event.getDragboard().hasFiles()) {
+            event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+        }
+    }
+
+    @FXML
+    private void handleDragDropped(DragEvent event) {
+        Dragboard db = event.getDragboard();
+        boolean success = false;
+
+        if (db.hasFiles() && !db.getFiles().isEmpty()) {
+            File droppedFile = db.getFiles().get(0);
+            success = processSelectedInput(droppedFile);
+        }
+
+        start.setDisable(!success);
+        event.setDropCompleted(success);
+        event.consume();
     }
 
     @FXML
@@ -333,39 +443,5 @@ public class PhotoFilterController implements Initializable {
 
         progressBar.progressProperty().bind(task.progressProperty());
         new Thread(task).start();
-    }
-
-    @FXML
-    private void handleDragOver(DragEvent event) {
-        if (event.getDragboard().hasFiles()) {
-            event.acceptTransferModes(TransferMode.ANY);
-        }
-    }
-
-    @FXML
-    private void handleDragDropped(DragEvent event) {
-        Dragboard db = event.getDragboard();
-        boolean success = false;
-
-        if (db.hasFiles()) {
-            File dossierSelectionne = db.getFiles().get(0);
-
-            if (dossierSelectionne.isDirectory()) {
-                String cheminDossier = dossierSelectionne.getAbsolutePath();
-
-                selectedFolder.setText(cheminDossier);
-                this.folder = dossierSelectionne;
-
-                success = true;
-            } else {
-                selectedFolder.setText("Aucun dossier sélectionné");
-                this.folder = null;
-            }
-        }
-
-        start.setDisable(!success);
-
-        event.setDropCompleted(success);
-        event.consume();
     }
 }
