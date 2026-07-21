@@ -13,6 +13,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.MenuButton;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.MenuItem;
@@ -40,7 +41,7 @@ import java.util.ResourceBundle;
 
 public class PhotoFilterController implements Initializable {
 
-    @FXML private Button folderSelect;
+    @FXML private MenuButton folderSelect;
     @FXML private TextArea selectedFolder;
     @FXML private Button start;
     @FXML private ProgressBar progressBar;
@@ -249,11 +250,26 @@ public class PhotoFilterController implements Initializable {
     }
 
     @FXML
-    void selectFolder(ActionEvent event) {
+    void selectFolderOnly(ActionEvent event) {
         Stage stage = (Stage) folderSelect.getScene().getWindow();
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        directoryChooser.setTitle("Choisir un dossier d'images");
 
+        File initialFolder = new File(System.getProperty("user.home"));
+        if (initialFolder.exists()) {
+            directoryChooser.setInitialDirectory(initialFolder);
+        }
+
+        File selectedFile = directoryChooser.showDialog(stage);
+        boolean success = processSelectedInput(selectedFile);
+        start.setDisable(!success);
+    }
+
+    @FXML
+    void selectArchiveOnly(ActionEvent event) {
+        Stage stage = (Stage) folderSelect.getScene().getWindow();
         javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
-        fileChooser.setTitle("Choisir une archive (.zip, .7z, .rar) ou annuler pour choisir un dossier");
+        fileChooser.setTitle("Choisir une archive (.zip, .7z, .rar, .tar.gz, .tgz)");
         fileChooser.getExtensionFilters().addAll(
             new javafx.stage.FileChooser.ExtensionFilter("Archives supportées", "*.zip", "*.7z", "*.rar", "*.tar.gz", "*.tgz"),
             new javafx.stage.FileChooser.ExtensionFilter("Tous les fichiers", "*.*")
@@ -265,16 +281,6 @@ public class PhotoFilterController implements Initializable {
         }
 
         File selectedFile = fileChooser.showOpenDialog(stage);
-
-        if (selectedFile == null) {
-            DirectoryChooser directoryChooser = new DirectoryChooser();
-            directoryChooser.setTitle("Choisir un dossier d'images");
-            if (initialFolder.exists()) {
-                directoryChooser.setInitialDirectory(initialFolder);
-            }
-            selectedFile = directoryChooser.showDialog(stage);
-        }
-
         boolean success = processSelectedInput(selectedFile);
         start.setDisable(!success);
     }

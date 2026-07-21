@@ -82,7 +82,7 @@
 }
 
 /* Buttons */
-.button {
+.button, #folderSelect {
     -fx-background-color: #343a40;
     -fx-text-fill: #f8f9fa;
     -fx-border-color: #495057;
@@ -94,18 +94,26 @@
     -fx-font-weight: 600;
 }
 
-.button:hover {
+.button:hover, #folderSelect:hover, #folderSelect:showing {
     -fx-background-color: #495057;
     -fx-border-color: #6c757d;
 }
 
-.button:pressed {
+.button:pressed, #folderSelect:pressed {
     -fx-background-color: #212529;
     -fx-border-color: #343a40;
 }
 
-.button:disabled {
+.button:disabled, #folderSelect:disabled {
     -fx-opacity: 0.5;
+}
+
+#folderSelect .label {
+    -fx-text-fill: #f8f9fa;
+}
+
+#folderSelect .arrow {
+    -fx-background-color: #f8f9fa;
 }
 
 /* Specific Style for Primary/Action Buttons */
