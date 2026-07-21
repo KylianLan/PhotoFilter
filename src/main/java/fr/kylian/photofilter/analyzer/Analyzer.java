@@ -107,6 +107,25 @@ public class Analyzer {
     }
 
     /**
+     * Helper de sécurité contre la vulnérabilité Zip/Archive Slip.
+     */
+    private void checkArchiveSlip(File targetDir, File newFile) throws IOException {
+        String canonicalTargetDir = targetDir.getCanonicalPath();
+        String canonicalNewFile = newFile.getCanonicalPath();
+        if (!canonicalNewFile.startsWith(canonicalTargetDir + File.separator) && !canonicalNewFile.equals(canonicalTargetDir)) {
+            throw new IOException("Fichier d'archive malveillant (Zip/Path Slip détecté) : " + newFile.getName());
+        }
+    }
+
+    /**
+     * Normalise les séparateurs de sous-dossiers (Windows \ vers Linux /).
+     */
+    private String sanitizeEntryName(String entryName) {
+        if (entryName == null) return "";
+        return entryName.replace('\\', '/');
+    }
+
+    /**
      * Extracts an archive file into the target directory.
      * @param archive The archive file to extract.
      * @param targetDir The destination directory.
@@ -122,14 +141,8 @@ public class Analyzer {
             try (ZipInputStream zis = new ZipInputStream(new FileInputStream(archive))) {
                 ZipEntry zipEntry = zis.getNextEntry();
                 while (zipEntry != null) {
-                    File newFile = new File(targetDir, zipEntry.getName());
-                    
-                    // Sécurité contre la vulnérabilité Zip Slip (recherche de ../ dans les noms)
-                    String canonicalTargetDir = targetDir.getCanonicalPath();
-                    String canonicalNewFile = newFile.getCanonicalPath();
-                    if (!canonicalNewFile.startsWith(canonicalTargetDir + File.separator) && !canonicalNewFile.equals(canonicalTargetDir)) {
-                        throw new IOException("Fichier ZIP malveillant (Zip Slip détecté) : " + zipEntry.getName());
-                    }
+                    File newFile = new File(targetDir, sanitizeEntryName(zipEntry.getName()));
+                    checkArchiveSlip(targetDir, newFile);
 
                     if (zipEntry.isDirectory()) {
                         if (!newFile.isDirectory() && !newFile.mkdirs()) {
@@ -148,7 +161,6 @@ public class Analyzer {
                             }
                         }
                         
-                        // Si le fichier extrait est une image ou une vidéo, on l'ajoute à la liste
                         if (isImage(newFile) || isVideo(newFile)) {
                             extractedFiles.add(newFile);
                         }
@@ -160,9 +172,9 @@ public class Analyzer {
         } else if (name.endsWith(".7z")) {
             try (SevenZFile sevenZFile = SevenZFile.builder().setFile(archive).get()) {
                 SevenZArchiveEntry entry = sevenZFile.getNextEntry();
-
                 while (entry != null) {
-                    File newFile = new File(targetDir, entry.getName());
+                    File newFile = new File(targetDir, sanitizeEntryName(entry.getName()));
+                    checkArchiveSlip(targetDir, newFile);
 
                     if (entry.isDirectory()) {
                         if (!newFile.isDirectory() && !newFile.mkdirs()) {
@@ -188,14 +200,14 @@ public class Analyzer {
                 }
             }
         } else if (name.endsWith(".tar.gz") || name.endsWith(".tgz")) {
-            try (InputStream fis = new FileInputStream(archive)) {
-                InputStream gzis = new GzipCompressorInputStream(fis);
-                TarArchiveInputStream tais = new TarArchiveInputStream(gzis);
+            try (InputStream fis = new FileInputStream(archive);
+                 InputStream gzis = new GzipCompressorInputStream(fis);
+                 TarArchiveInputStream tais = new TarArchiveInputStream(gzis)) {
 
                 TarArchiveEntry entry = tais.getNextEntry();
-
                 while (entry != null) {
-                    File newFile = new File(targetDir, entry.getName());
+                    File newFile = new File(targetDir, sanitizeEntryName(entry.getName()));
+                    checkArchiveSlip(targetDir, newFile);
 
                     if (entry.isDirectory()) {
                         if (!newFile.isDirectory() && !newFile.mkdirs()) {
@@ -225,12 +237,13 @@ public class Analyzer {
                 FileHeader fileHeader = rarArchive.nextFileHeader();
 
                 while (fileHeader != null) {
-                    String entryName = fileHeader.isUnicode() ? fileHeader.getFileNameW() : fileHeader.getFileNameString();
-                    File newFile = new File(targetDir, entryName.trim());
+                    String rawName = fileHeader.isUnicode() ? fileHeader.getFileNameW() : fileHeader.getFileNameString();
+                    File newFile = new File(targetDir, sanitizeEntryName(rawName.trim()));
+                    checkArchiveSlip(targetDir, newFile);
 
                     if (fileHeader.isDirectory()) {
                         if (!newFile.isDirectory() && !newFile.mkdirs()) {
-                            throw new IOException("Impossible de créer le dossier : "+newFile);
+                            throw new IOException("Impossible de créer le dossier : " + newFile);
                         }
                     } else {
                         File parent = newFile.getParentFile();
