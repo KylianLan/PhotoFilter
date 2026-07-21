@@ -24,6 +24,9 @@ import fr.kylian.photofilter.filter.FilterMode;
 import fr.kylian.photofilter.filter.FilterRange;
 import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry;
 import org.apache.commons.compress.archivers.sevenz.SevenZFile;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 
 /**
  * Core logic for analyzing photo/video metadata and organizing files.
@@ -182,7 +185,38 @@ public class Analyzer {
                 }
             }
         } else if (name.endsWith(".tar.gz") || name.endsWith(".tgz")) {
-            // Extension possible avec Apache Commons Compress (TarArchiveInputStream)
+            try (InputStream fis = new FileInputStream(archive)) {
+                InputStream gzis = new GzipCompressorInputStream(fis);
+                TarArchiveInputStream tais = new TarArchiveInputStream(gzis);
+
+                TarArchiveEntry entry = tais.getNextEntry();
+
+                while (entry != null) {
+                    File newFile = new File(targetDir, entry.getName());
+
+                    if (entry.isDirectory()) {
+                        if (!newFile.isDirectory() && !newFile.mkdirs()) {
+                            throw new IOException("Impossible de créer le dossier : " + newFile);
+                        }
+                    } else {
+                        File parent = newFile.getParentFile();
+                        if (parent != null && !parent.isDirectory() && !parent.mkdirs()) {
+                            throw new IOException("Impossible de créer le dossier parent : " + parent);
+                        }
+
+                        try (FileOutputStream fos = new FileOutputStream(newFile)) {
+                            int len;
+                            while ((len = tais.read(buffer)) > 0) {
+                                fos.write(buffer, 0, len);
+                            }
+                        }
+                        if (isImage(newFile) || isVideo(newFile)) {
+                            extractedFiles.add(newFile);
+                        }
+                    }
+                    entry = tais.getNextEntry();
+                }
+            }
         } else if (name.endsWith(".rar")) {
             // Extension possible avec Junrar
         }
