@@ -448,13 +448,15 @@ public class Analyzer {
      */
     public void putInFolder(File baseFolder, List<File> files, Filter filter, Runnable onProgress) throws IOException {
         File destFolder = new File(baseFolder, filter.getName());
-        if (!destFolder.exists()) {
-            destFolder.mkdirs();
-        }
 
         for (File f : files) {
             LocalDate creationDate = getFileCreationDate(f);
             if (compareDates(creationDate, filter)) {
+
+                if (!destFolder.exists()) {
+                    destFolder.mkdirs();
+                }
+
                 File destFile = new File(destFolder, f.getName());
                 if (destFile.exists()) {
                     if (Files.mismatch(f.toPath(), destFile.toPath()) == -1L) {
