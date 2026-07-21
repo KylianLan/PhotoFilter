@@ -12,6 +12,7 @@ module fr.kylian.photofilter {
     requires java.net.http;
     requires java.prefs;
     requires org.apache.commons.compress;
+    requires junrar;
 
     opens fr.kylian.photofilter to javafx.fxml;
     opens fr.kylian.photofilter.filter to com.fasterxml.jackson.databind;

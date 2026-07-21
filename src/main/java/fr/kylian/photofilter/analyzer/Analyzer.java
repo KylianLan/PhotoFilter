@@ -19,6 +19,9 @@ import java.util.zip.ZipOutputStream;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.junrar.Archive;
+import com.github.junrar.exception.RarException;
+import com.github.junrar.rarfile.FileHeader;
 import fr.kylian.photofilter.filter.Filter;
 import fr.kylian.photofilter.filter.FilterMode;
 import fr.kylian.photofilter.filter.FilterRange;
@@ -110,7 +113,7 @@ public class Analyzer {
      * @return List of extracted files.
      * @throws IOException If an I/O error occurs or if a file path is insecure (Zip Slip vulnerability).
      */
-    public List<File> decompressArchive(final File archive, File targetDir) throws IOException {
+    public List<File> decompressArchive(final File archive, File targetDir) throws IOException, RarException {
         List<File> extractedFiles = new ArrayList<>();
         String name = archive.getName().toLowerCase();
         byte[] buffer = new byte[8192];
@@ -218,7 +221,33 @@ public class Analyzer {
                 }
             }
         } else if (name.endsWith(".rar")) {
-            // Extension possible avec Junrar
+            try (Archive rarArchive = new Archive(archive)) {
+                FileHeader fileHeader = rarArchive.nextFileHeader();
+
+                while (fileHeader != null) {
+                    String entryName = fileHeader.isUnicode() ? fileHeader.getFileNameW() : fileHeader.getFileNameString();
+                    File newFile = new File(targetDir, entryName.trim());
+
+                    if (fileHeader.isDirectory()) {
+                        if (!newFile.isDirectory() && !newFile.mkdirs()) {
+                            throw new IOException("Impossible de créer le dossier : "+newFile);
+                        }
+                    } else {
+                        File parent = newFile.getParentFile();
+                        if (parent != null && !parent.isDirectory() && !parent.mkdirs()) {
+                            throw new IOException("Impossible de créer le dossier parent : " + parent);
+                        }
+
+                        try (FileOutputStream fos = new FileOutputStream(newFile)) {
+                            rarArchive.extractFile(fileHeader, fos);
+                        }
+                        if (isImage(newFile) || isVideo(newFile)) {
+                            extractedFiles.add(newFile);
+                        }
+                    }
+                    fileHeader = rarArchive.nextFileHeader();
+                }
+            }
         }
 
         return extractedFiles;
