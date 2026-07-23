@@ -8,6 +8,7 @@ import fr.kylian.photofilter.filter.Filter;
 import javafx.application.HostServices;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -486,6 +487,71 @@ public class PhotoFilterController implements Initializable {
 
     @FXML
     private void startCompressing(ActionEvent event) {
-        
+        if (folder == null) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+            alert.setTitle("Dossier manquant");
+            alert.setHeaderText(null);
+            alert.setContentText("Veuillez choisir un dossier source contenant les photos à filtrer.");
+            alert.showAndWait();
+            return;
+        }
+
+        Stage stage = (Stage) folderSelect.getScene().getWindow();
+
+        File initialDestination = new File(System.getProperty("user.home"));
+        DirectoryChooser destSelection = new DirectoryChooser();
+        destSelection.setTitle("Choisir une destination");
+        destSelection.setInitialDirectory(initialDestination);
+
+        File destination = destSelection.showDialog(stage);
+        if (destination == null) {
+            return;
+        }
+
+        start.setDisable(true);
+        progressBar.setProgress(0.0);
+
+        javafx.concurrent.Task<Void> filterTask = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                // TODO faire la gestion de la compression des images et des vidéos via les classes du package fr/kylian/photofilter/compressor
+                return null;
+            }
+        };
+
+        activeTask = filterTask;
+
+        filterTask.setOnSucceeded(e -> {
+            progressBar.progressProperty().unbind();
+            progressBar.setProgress(1.0);
+            start.setDisable(false);
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+            alert.setTitle("Terminé");
+            alert.setHeaderText(null);
+            alert.setContentText("La compression est terminée !");
+            alert.showAndWait();
+            resetProgressBarDelayed();
+        });
+
+        filterTask.setOnFailed(e -> {
+            progressBar.progressProperty().unbind();
+            progressBar.setProgress(0.0);
+            start.setDisable(false);
+            Throwable exception = filterTask.getException();
+            exception.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+            alert.setTitle("Erreur");
+            alert.setHeaderText(null);
+            alert.setContentText("Une erreur s'est produite lors de la compression : " + exception.getMessage());
+            alert.showAndWait();
+        });
+
+        progressBar.progressProperty().bind(filterTask.progressProperty());
+        Thread thread = new Thread(filterTask);
+        thread.setDaemon(true);
+        thread.start();
     }
 }

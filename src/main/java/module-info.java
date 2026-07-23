@@ -14,6 +14,8 @@ module fr.kylian.photofilter {
     requires org.apache.commons.compress;
     requires org.tukaani.xz;
     requires junrar;
+    requires jave.core;
+    requires org.apache.commons.codec;
 
     opens fr.kylian.photofilter to javafx.fxml;
     opens fr.kylian.photofilter.filter to com.fasterxml.jackson.databind;
