@@ -52,16 +52,8 @@ public class Analyzer {
      * @return true if the file is an image.
      */
     public boolean isImage(File file) {
-        if (file.isDirectory() || file.isHidden())
-            return false;
+        String ext = getExtension(file);
 
-        String name = file.getName().toLowerCase();
-        int dotIndex = name.lastIndexOf(".");
-
-        if (dotIndex <= 0)
-            return false;
-
-        String ext = name.substring(dotIndex);
         return IMAGE_EXTENSIONS.contains(ext);
     }
 
@@ -71,17 +63,27 @@ public class Analyzer {
      * @return true if the file is a video.
      */
     public boolean isVideo(File file) {
+        String ext = getExtension(file);
+
+        return VIDEO_EXTENSIONS.contains(ext);
+    }
+
+    /**
+     * Gets the extension of a file.
+     * @param file The file to get the extension of
+     * @return A string which is the file's extenion
+     */
+    public static String getExtension(final File file) {
         if (file.isDirectory() || file.isHidden())
-            return false;
+            return null;
 
         String name = file.getName().toLowerCase();
         int dotIndex = name.lastIndexOf(".");
 
         if (dotIndex <= 0)
-            return false;
+            return null;
 
-        String ext = name.substring(dotIndex);
-        return VIDEO_EXTENSIONS.contains(ext);
+        return name.substring(dotIndex);
     }
 
     /**
