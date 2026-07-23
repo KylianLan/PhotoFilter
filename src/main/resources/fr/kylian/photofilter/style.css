@@ -81,17 +81,63 @@
     -fx-text-fill: #f8f9fa;
 }
 
-/* Buttons */
-.button, #folderSelect {
+/* Buttons & SplitMenuButtons */
+.button, .split-menu-button, #folderSelect {
     -fx-background-color: #343a40;
     -fx-text-fill: #f8f9fa;
     -fx-border-color: #495057;
     -fx-border-width: 1px;
     -fx-border-radius: 6px;
     -fx-background-radius: 6px;
-    -fx-padding: 8px 16px;
     -fx-cursor: hand;
     -fx-font-weight: 600;
+}
+
+.button {
+    -fx-padding: 8px 16px;
+}
+
+.split-menu-button {
+    -fx-padding: 0;
+}
+
+/* Reset ALL internal buttons & labels so JavaFX Modena styles never leak through */
+.split-menu-button > .button,
+.split-menu-button > .button:hover,
+.split-menu-button > .button:focused,
+.split-menu-button > .button:pressed,
+.split-menu-button > .button:armed,
+.split-menu-button > .label,
+.split-menu-button > .label:hover,
+.split-menu-button > .label:focused,
+.split-menu-button > .label:pressed,
+.split-menu-button > .label:armed,
+.split-menu-button > .arrow-button,
+.split-menu-button > .arrow-button:focused {
+    -fx-background-color: transparent !important;
+    -fx-background-insets: 0 !important;
+    -fx-border-color: transparent !important;
+    -fx-border-width: 0 !important;
+    -fx-background-radius: 0 !important;
+}
+
+.split-menu-button > .button,
+.split-menu-button > .label {
+    -fx-padding: 8px 14px;
+    -fx-background-radius: 5px 0 0 5px !important;
+    -fx-text-fill: #f8f9fa !important;
+    -fx-font-weight: 600;
+}
+
+.split-menu-button > .arrow-button {
+    -fx-padding: 8px 10px;
+    -fx-border-color: #495057 !important;
+    -fx-border-width: 0 0 0 1px !important;
+    -fx-background-radius: 0 5px 5px 0 !important;
+}
+
+.split-menu-button > .arrow-button > .arrow {
+    -fx-background-color: #f8f9fa !important;
 }
 
 .button:hover, #folderSelect:hover, #folderSelect:showing {
@@ -104,10 +150,6 @@
     -fx-border-color: #343a40;
 }
 
-.button:disabled, #folderSelect:disabled {
-    -fx-opacity: 0.5;
-}
-
 #folderSelect .label {
     -fx-text-fill: #f8f9fa;
 }
@@ -116,20 +158,54 @@
     -fx-background-color: #f8f9fa;
 }
 
-/* Specific Style for Primary/Action Buttons */
-#start.button, .button-primary {
-    -fx-background-color: #0d6efd;
-    -fx-border-color: #0d6efd;
-    -fx-text-fill: #ffffff;
+/* Specific Style for Primary/Action Buttons & SplitMenuButtons */
+.button-primary, #start {
+    -fx-background-color: #0d6efd !important;
+    -fx-border-color: #0d6efd !important;
+    -fx-text-fill: #ffffff !important;
 }
 
-#start.button:hover, .button-primary:hover {
-    -fx-background-color: #0b5ed7;
-    -fx-border-color: #0a58ca;
+.button-primary > .button > .label,
+.button-primary > .label,
+.button-primary .label,
+#start > .button > .label,
+#start > .label,
+#start .label {
+    -fx-text-fill: #ffffff !important;
+    -fx-font-weight: 600;
 }
 
-#start.button:pressed, .button-primary:pressed {
-    -fx-background-color: #0a58ca;
+.button-primary > .arrow-button, #start > .arrow-button {
+    -fx-border-color: rgba(255, 255, 255, 0.3) !important;
+    -fx-border-width: 0 0 0 1px !important;
+}
+
+.button-primary > .arrow-button > .arrow, #start > .arrow-button > .arrow {
+    -fx-background-color: #ffffff !important;
+}
+
+/* Micro-interaction hovers */
+.split-menu-button > .button:hover,
+.split-menu-button > .label:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.split-menu-button > .arrow-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.button-primary:hover, #start:hover {
+    -fx-background-color: #0b5ed7 !important;
+    -fx-border-color: #0a58ca !important;
+}
+
+.button-primary:pressed, #start:pressed {
+    -fx-background-color: #0a58ca !important;
+    -fx-border-color: #0a58ca !important;
+}
+
+.button:disabled, .button-primary:disabled, #start:disabled, .split-menu-button:disabled {
+    -fx-opacity: 0.5 !important;
 }
 
 /* Toggle Buttons */

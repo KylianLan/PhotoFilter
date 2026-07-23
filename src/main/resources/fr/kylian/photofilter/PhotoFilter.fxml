@@ -8,6 +8,7 @@
 <?import javafx.scene.control.MenuButton?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.SplitMenuButton?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -61,7 +62,12 @@
              </MenuButton>
              <VBox alignment="CENTER" spacing="20.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                 <children>
-                   <Button fx:id="start" mnemonicParsing="false" onAction="#startFiltering" prefWidth="120.0" styleClass="button-primary" text="Lancer le tri" />
+                  <SplitMenuButton fx:id="start" mnemonicParsing="false" onAction="#startFiltering" styleClass="button-primary" text="Lancer le tri">
+                    <items>
+                      <MenuItem mnemonicParsing="false" onAction="#startFiltering" text="Lancer le tri" />
+                      <MenuItem mnemonicParsing="false" onAction="#startCompressing" text="Compresser mes photos" />
+                    </items>
+                  </SplitMenuButton>
                    <ProgressBar fx:id="progressBar" prefWidth="150.0" progress="0.0" />
                 </children>
              </VBox>

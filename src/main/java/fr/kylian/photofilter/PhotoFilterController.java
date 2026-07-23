@@ -13,19 +13,13 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.MenuButton;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.*;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.scene.control.TextInputDialog;
 import fr.kylian.photofilter.licensemanager.LicenseVerifier;
 import fr.kylian.photofilter.licensemanager.LicenseStorage;
 
@@ -43,7 +37,7 @@ public class PhotoFilterController implements Initializable {
 
     @FXML private MenuButton folderSelect;
     @FXML private TextArea selectedFolder;
-    @FXML private Button start;
+    @FXML private SplitMenuButton start;
     @FXML private ProgressBar progressBar;
     @FXML private TextArea enabledFilters;
     @FXML private MenuItem help;
@@ -488,5 +482,10 @@ public class PhotoFilterController implements Initializable {
         Thread thread = new Thread(filterTask);
         thread.setDaemon(true);
         thread.start();
+    }
+
+    @FXML
+    private void startCompressing(ActionEvent event) {
+        
     }
 }
