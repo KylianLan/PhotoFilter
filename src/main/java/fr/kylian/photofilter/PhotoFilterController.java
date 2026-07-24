@@ -2,6 +2,7 @@ package fr.kylian.photofilter;
 
 import com.github.junrar.exception.RarException;
 import fr.kylian.photofilter.analyzer.Analyzer;
+import fr.kylian.photofilter.compressor.MediaCompressor;
 import fr.kylian.photofilter.filter.FiltersSaver;
 import fr.kylian.photofilter.filter.FilterMode;
 import fr.kylian.photofilter.filter.Filter;
@@ -512,10 +513,42 @@ public class PhotoFilterController implements Initializable {
         start.setDisable(true);
         progressBar.setProgress(0.0);
 
-        javafx.concurrent.Task<Void> filterTask = new Task<Void>() {
+        javafx.concurrent.Task<Void> filterTask = new javafx.concurrent.Task<Void>() {
             @Override
             protected Void call() throws Exception {
-                // TODO faire la gestion de la compression des images et des vidéos via les classes du package fr/kylian/photofilter/compressor
+                Analyzer analyzer = new Analyzer();
+                List<File> files = analyzer.getFiles(folder);
+                
+                File compressionFolder = new File(destination, "Compression");
+                if (!compressionFolder.exists()) {
+                    compressionFolder.mkdirs();
+                }
+
+                MediaCompressor mediaCompressor = new MediaCompressor();
+
+                int totalWork = files.size();
+                int workDone = 0;
+
+                for (File file : files) {
+                    if (isCancelled()) {
+                        break;
+                    }
+
+                    File destFile = new File(compressionFolder, file.getName());
+
+                    try {
+                        if (analyzer.isImage(file)) {
+                            mediaCompressor.compressImage(file, destFile);
+                        } else if (analyzer.isVideo(file)) {
+                            mediaCompressor.compressVideo(file, destFile);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Erreur lors de la compression de " + file.getName() + " : " + e.getMessage());
+                    }
+
+                    workDone++;
+                    updateProgress(workDone, totalWork);
+                }
                 return null;
             }
         };
