@@ -1,7 +1,5 @@
 package fr.kylian.photofilter;
 
-import fr.kylian.photofilter.licensemanager.LicenseVerifier;
-import fr.kylian.photofilter.licensemanager.LicenseStorage;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -25,80 +23,7 @@ public class PhotoFilterApplication extends Application {
         
         // On lance le flux asynchrone de vérification de licence.
         // L'interface principale ne s'affichera que si la licence est valide.
-        startLicenseCheckFlow(stage);
-    }
-
-    private void startLicenseCheckFlow(Stage mainStage) {
-        String savedKey = LicenseStorage.getSavedKey();
-
-        if (savedKey != null && !savedKey.trim().isEmpty()) {
-            System.out.println("Vérification de la clé de licence sauvegardée en arrière-plan...");
-            verifyKeyAsync(savedKey, true, mainStage);
-        } else {
-            promptForKey(mainStage);
-        }
-    }
-
-    private void promptForKey(Stage mainStage) {
-        TextInputDialog dialog = new TextInputDialog();
-        dialog.getDialogPane().getStylesheets().add(PhotoFilterApplication.class.getResource("style.css").toExternalForm());
-        dialog.setTitle("Vérification de la licence");
-        dialog.setHeaderText("Une clé de licence est requise pour utiliser PhotoFilter.");
-        dialog.setContentText("Veuillez entrer votre clé de licence :");
-
-        Optional<String> result = dialog.showAndWait();
-        if (result.isPresent()) {
-            String key = result.get().trim();
-            if (key.isEmpty()) {
-                Alert trialAlert = new Alert(Alert.AlertType.INFORMATION);
-                trialAlert.getDialogPane().getStylesheets().add(PhotoFilterApplication.class.getResource("style.css").toExternalForm());
-                trialAlert.setTitle("Mode d'essai");
-                trialAlert.setHeaderText(null);
-                trialAlert.setContentText("Vous entrez en mode d'essai. La création est limitée à 2 filtres.");
-                trialAlert.showAndWait();
-
-                LicenseVerifier.setTrialMode(true);
-                showMainApp(mainStage);
-                return;
-            }
-
-            System.out.println("Vérification de la nouvelle clé saisie en arrière-plan...");
-            verifyKeyAsync(key, false, mainStage);
-        } else {
-            // L'utilisateur a cliqué sur "Annuler" ou fermé la fenêtre
-            Platform.exit();
-        }
-    }
-
-    private void verifyKeyAsync(String key, boolean isSavedKey, Stage mainStage) {
-        // Exécution de la vérification HTTP dans un thread séparé (supplyAsync) pour ne pas freezer l'UI
-        java.util.concurrent.CompletableFuture.supplyAsync(() -> LicenseVerifier.checkLicense(key))
-            .thenAcceptAsync(isValid -> {
-                // Ce bloc s'exécute sur le thread JavaFX (grâce à Platform::runLater) quand le HTTP est terminé
-                if (isValid) {
-                    LicenseStorage.saveKey(key);
-                    
-                    if (!isSavedKey) {
-                        Alert success = new Alert(Alert.AlertType.INFORMATION);
-                        success.getDialogPane().getStylesheets().add(PhotoFilterApplication.class.getResource("style.css").toExternalForm());
-                        success.setTitle("Licence valide");
-                        success.setHeaderText(null);
-                        success.setContentText("Votre clé de licence a été validée avec succès !");
-                        success.showAndWait();
-                    }
-                    
-                    showMainApp(mainStage);
-                } else {
-                    if (isSavedKey) {
-                        // Si la clé sauvegardée a expiré ou n'est plus valide, on la supprime
-                        LicenseStorage.removeKey();
-                    } else {
-                        showError("La clé de licence est invalide, a expiré, ou le serveur est inaccessible.");
-                    }
-                    // On redemande une clé à l'utilisateur
-                    promptForKey(mainStage);
-                }
-            }, Platform::runLater);
+        showMainApp(stage);
     }
 
     private void showMainApp(Stage stage) {

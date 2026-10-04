@@ -1,6 +1,5 @@
 package fr.kylian.photofilter;
 
-import fr.kylian.photofilter.licensemanager.HardwareUtils;
 import javafx.application.Application;
 
 import java.util.Locale;

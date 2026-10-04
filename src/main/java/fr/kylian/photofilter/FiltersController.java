@@ -3,7 +3,6 @@ package fr.kylian.photofilter;
 import fr.kylian.photofilter.filter.FilterMode;
 import fr.kylian.photofilter.filter.Filter;
 import fr.kylian.photofilter.filter.FilterRange;
-import fr.kylian.photofilter.licensemanager.LicenseVerifier;
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -187,10 +186,6 @@ public class FiltersController {
      */
     @FXML
     void addFilter() {
-        if (LicenseVerifier.isTrialMode() && filters.size() >= 2) {
-            showAlert("Mode d'essai", "En mode d'essai, vous ne pouvez pas créer plus de 2 filtres.", Alert.AlertType.WARNING);
-            return;
-        }
 
         // Step 1: Choose Filter Type (Parameters: Day, Month, Year)
         FilterMode[] params = askFilterParams();

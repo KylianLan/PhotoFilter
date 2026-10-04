@@ -27,7 +27,6 @@
             <items>
               <MenuItem mnemonicParsing="false" onAction="#selectFolderOnly" text="Charger un dossier..." />
               <MenuItem mnemonicParsing="false" onAction="#selectArchiveOnly" text="Charger une archive..." />
-              <MenuItem mnemonicParsing="false" onAction="#changeLicense" text="Changer de licence" />
             </items>
           </Menu>
           <Menu mnemonicParsing="false" text="_Aide">

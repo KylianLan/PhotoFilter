@@ -22,8 +22,6 @@ import javafx.scene.input.TransferMode;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import fr.kylian.photofilter.licensemanager.LicenseVerifier;
-import fr.kylian.photofilter.licensemanager.LicenseStorage;
 
 import javafx.event.ActionEvent;
 
@@ -84,22 +82,14 @@ public class PhotoFilterController implements Initializable {
         // Load saved filters on startup
         Filter[] savedFilters = filtersSaver.loadFilters();
         if (savedFilters != null && savedFilters.length > 0) {
-            if (LicenseVerifier.isTrialMode() && savedFilters.length > 2) {
-                for (int i = 0; i < 2; i++) {
-                    filters.add(savedFilters[i]);
-                }
-            } else {
-                filters.addAll(savedFilters);
-            }
+            filters.addAll(savedFilters);
         } else {
             // Fallback default filters
             FilterMode[] dayAndMonth = new FilterMode[]{FilterMode.DAY, FilterMode.MONTH};
+            filters.add(new Filter("Réveillon de Noël", LocalDate.of(0, 12, 24), dayAndMonth));
             filters.add(new Filter("Noël", LocalDate.of(0, 12, 25), dayAndMonth));
+            filters.add(new Filter("Veille du jour de l'an", LocalDate.of(0, 12, 31), dayAndMonth));
             filters.add(new Filter("Jour de l'an", LocalDate.of(0, 1, 1), dayAndMonth));
-            if (!LicenseVerifier.isTrialMode()) {
-                filters.add(new Filter("Réveillon de Noël", LocalDate.of(0, 12, 24), dayAndMonth));
-                filters.add(new Filter("Veille du jour de l'an", LocalDate.of(0, 12, 31), dayAndMonth));
-            }
         }
 
         updateEnabledFiltersTextArea();
@@ -301,66 +291,6 @@ public class PhotoFilterController implements Initializable {
         start.setDisable(!success);
         event.setDropCompleted(success);
         event.consume();
-    }
-
-    @FXML
-    void changeLicense(ActionEvent event) {
-        String currentKey = LicenseStorage.getSavedKey();
-        TextInputDialog dialog = new TextInputDialog(currentKey != null ? currentKey : "");
-        dialog.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-        dialog.setTitle("Changer de licence");
-        dialog.setHeaderText("Entrez votre clé de licence pour activer PhotoFilter :");
-        dialog.setContentText("Clé de licence :");
-
-        Optional<String> result = dialog.showAndWait();
-        if (result.isPresent()) {
-            String key = result.get().trim();
-            if (key.isEmpty()) {
-                Alert error = new Alert(Alert.AlertType.ERROR);
-                error.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-                error.setTitle("Erreur");
-                error.setHeaderText(null);
-                error.setContentText("La clé de licence ne peut pas être vide.");
-                error.showAndWait();
-                return;
-            }
-
-            // Exécution de la vérification de la clé
-            // Nous affichons une alerte d'attente ou vérifions rapidement
-            boolean isValid = LicenseVerifier.checkLicense(key);
-            if (isValid) {
-                LicenseStorage.saveKey(key);
-                LicenseVerifier.setTrialMode(false);
-                
-                // Recharger tous les filtres pour restaurer ceux qui auraient été tronqués en mode d'essai
-                filters.clear();
-                Filter[] reloaded = filtersSaver.loadFilters();
-                if (reloaded != null && reloaded.length > 0) {
-                    filters.addAll(reloaded);
-                } else {
-                    FilterMode[] dayAndMonth = new FilterMode[]{FilterMode.DAY, FilterMode.MONTH};
-                    filters.add(new Filter("Noël", LocalDate.of(0, 12, 25), dayAndMonth));
-                    filters.add(new Filter("Réveillon de Noël", LocalDate.of(0, 12, 24), dayAndMonth));
-                    filters.add(new Filter("Veille du jour de l'an", LocalDate.of(0, 12, 31), dayAndMonth));
-                    filters.add(new Filter("Jour de l'an", LocalDate.of(0, 1, 1), dayAndMonth));
-                }
-                updateEnabledFiltersTextArea();
-
-                Alert success = new Alert(Alert.AlertType.INFORMATION);
-                success.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-                success.setTitle("Licence valide");
-                success.setHeaderText(null);
-                success.setContentText("Votre clé de licence a été validée et enregistrée avec succès ! Le mode d'essai est désactivé.");
-                success.showAndWait();
-            } else {
-                Alert error = new Alert(Alert.AlertType.ERROR);
-                error.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-                error.setTitle("Licence invalide");
-                error.setHeaderText(null);
-                error.setContentText("La clé de licence est invalide, a expiré, ou le serveur est inaccessible.");
-                error.showAndWait();
-            }
-        }
     }
 
     @FXML
