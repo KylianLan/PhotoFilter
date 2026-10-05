@@ -1,4 +1,4 @@
-# PhotoFitter
+# PhotoFilter
 
 PhotoFilter lets you filter your photos and videos by date.
 
