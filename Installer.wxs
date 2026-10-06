@@ -1,0 +1,60 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+
+  <Package Name="PhotoFilter"
+           Manufacturer="Kylian"
+           Version="1.6.0"
+           UpgradeCode="cedf662c-b67a-4d25-b423-f5fcb7df63cc"
+           Scope="perMachine"
+           Language="1036">
+
+    <!-- Gestion automatique des mises à jour majeures -->
+    <MajorUpgrade DowngradeErrorMessage="Une version plus récente de PhotoFilter est déjà installée." />
+
+    <!-- Inclusion des fichiers d'installation dans le .msi -->
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Interface graphique WiX standard avec choix de dossier -->
+    <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
+
+    <!-- Arborescence des dossiers -->
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="PhotoFilter" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="PhotoFilter" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="DesktopFolder" />
+
+    <!-- Groupe contenant tous les fichiers jpackage (récolte propre en WiX v4) -->
+    <ComponentGroup Id="ProductFiles" Directory="INSTALLFOLDER">
+      <Files Include="release\PhotoFilter\**" />
+    </ComponentGroup>
+
+    <!-- Raccourcis Menu Démarrer et Bureau -->
+    <Component Id="ApplicationShortcuts" Directory="ApplicationProgramsFolder" Guid="b4d60dba-9ff8-43f0-a6fb-25dcf2ae8752">
+      <Shortcut Id="ApplicationStartMenuShortcut"
+                Name="PhotoFilter"
+                Description="Application de tri de photos"
+                Target="[INSTALLFOLDER]PhotoFilter.exe"
+                WorkingDirectory="INSTALLFOLDER" />
+      <Shortcut Id="ApplicationDesktopShortcut"
+                Directory="DesktopFolder"
+                Name="PhotoFilter"
+                Description="Application de tri de photos"
+                Target="[INSTALLFOLDER]PhotoFilter.exe"
+                WorkingDirectory="INSTALLFOLDER" />
+      <RemoveFolder Id="CleanUpShortcuts" Directory="ApplicationProgramsFolder" On="uninstall" />
+      <RegistryValue Root="HKCU" Key="Software\PhotoFilter" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <!-- Feature principale qui rattache les composants -->
+    <Feature Id="MainFeature" Title="PhotoFilter" Level="1">
+      <ComponentGroupRef Id="ProductFiles" />
+      <ComponentRef Id="ApplicationShortcuts" />
+    </Feature>
+
+  </Package>
+</Wix>

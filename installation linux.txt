@@ -1,0 +1,37 @@
+PhotoFilter-1.6.0-linux[-portable]-x64
+
+UUID pour msi Windows :
+[guid]::NewGuid() (dans PowerShell pour avoir un nouvel UUID)
+
+msi : 
+	cedf662c-b67a-4d25-b423-f5fcb7df63cc
+exe :
+	b4d60dba-9ff8-43f0-a6fb-25dcf2ae8752
+
+Commandes :
+
+jpackage --type app-image --name PhotoFilter --app-version 1.6.0 --description "Application de tri de photos" --input target --main-jar PhotoFilter-1.6.0.jar --main-class fr.kylian.photofilter.Launcher --dest release --icon target/photofilter_logo_monochrome.png
+
+jpackage --type rpm \
+  --name PhotoFilter \
+  --app-version 1.6.0 \
+  --description "Application de tri de photos" \
+  --input target \
+  --main-jar PhotoFilter-1.6.0.jar \
+  --main-class fr.kylian.photofilter.Launcher \
+  --icon target/photofilter_logo_monochrome.png \
+  --linux-shortcut \
+  --linux-menu-group "Graphics;Utility;" \
+  --dest release
+
+jpackage --type deb \
+  --name PhotoFilter \
+  --app-version 1.6.0 \
+  --description "Application de tri de photos" \
+  --input target \
+  --main-jar PhotoFilter-1.6.0.jar \
+  --main-class fr.kylian.photofilter.Launcher \
+  --icon target/photofilter_logo_monochrome.png \
+  --linux-shortcut \
+  --linux-menu-group "Graphics;Utility;" \
+  --dest release

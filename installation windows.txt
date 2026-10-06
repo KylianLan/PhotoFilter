@@ -1,0 +1,15 @@
+PhotoFilter-1.6.0-windows[-portable]-x64
+
+UUID pour msi Windows :
+[guid]::NewGuid() (dans PowerShell pour avoir un nouvel UUID)
+
+msi : 
+	cedf662c-b67a-4d25-b423-f5fcb7df63cc
+exe :
+	b4d60dba-9ff8-43f0-a6fb-25dcf2ae8752
+
+Commandes :
+
+jpackage --type app-image --name PhotoFilter --app-version 1.6.0 --description "Application de tri de photos" --input target --main-jar PhotoFilter-1.6.0.jar --main-class fr.kylian.photofilter.Launcher --dest release --icon target/photofilter_logo_monochrome.ico
+
+wix build Installer.wxs -ext WixToolset.UI.wixext -o PhotoFilter-1.6.0-windows-x64.msi
