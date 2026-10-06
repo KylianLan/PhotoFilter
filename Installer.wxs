@@ -3,7 +3,7 @@
 
   <Package Name="PhotoFilter"
            Manufacturer="Kylian"
-           Version="1.6.0"
+           Version="1.6.1"
            UpgradeCode="cedf662c-b67a-4d25-b423-f5fcb7df63cc"
            Scope="perMachine"
            Language="1036">
