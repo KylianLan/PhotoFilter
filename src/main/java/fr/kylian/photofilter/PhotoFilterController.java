@@ -296,7 +296,10 @@ public class PhotoFilterController implements Initializable {
     @FXML
     void openFiltersHandler(ActionEvent event) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("DateSelector.fxml"));
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("DateSelector.fxml"),
+                    I18n.getBundle()
+            );
             Parent root = loader.load();
 
             FiltersController controller = loader.getController();
@@ -328,9 +331,9 @@ public class PhotoFilterController implements Initializable {
         if (folder == null) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-            alert.setTitle("Dossier manquant");
+            alert.setTitle(I18n.get("alert.missingFolder"));
             alert.setHeaderText(null);
-            alert.setContentText("Veuillez choisir un dossier source contenant les photos à filtrer.");
+            alert.setContentText(I18n.get("alert.selectFolder"));
             alert.showAndWait();
             return;
         }
@@ -339,7 +342,7 @@ public class PhotoFilterController implements Initializable {
 
         File initialDestination = new File(System.getProperty("user.home"));
         DirectoryChooser destSelection = new DirectoryChooser();
-        destSelection.setTitle("Choisir une destination");
+        destSelection.setTitle(I18n.get("selectDest"));
         destSelection.setInitialDirectory(initialDestination);
 
         File destination = destSelection.showDialog(stage);
@@ -389,9 +392,9 @@ public class PhotoFilterController implements Initializable {
             start.setDisable(false);
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-            alert.setTitle("Terminé");
+            alert.setTitle(I18n.get("alert.done"));
             alert.setHeaderText(null);
-            alert.setContentText("Le filtrage est terminé !");
+            alert.setContentText(I18n.get("alter.filteringDone"));
             alert.showAndWait();
             resetProgressBarDelayed();
         });
@@ -404,9 +407,9 @@ public class PhotoFilterController implements Initializable {
             exception.printStackTrace();
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-            alert.setTitle("Erreur");
+            alert.setTitle(I18n.get("alert.error"));
             alert.setHeaderText(null);
-            alert.setContentText("Une erreur s'est produite lors du filtrage : " + exception.getMessage());
+            alert.setContentText(I18n.get("alert.filteringError") + exception.getMessage());
             alert.showAndWait();
         });
 
@@ -421,9 +424,9 @@ public class PhotoFilterController implements Initializable {
         if (folder == null) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-            alert.setTitle("Dossier manquant");
+            alert.setTitle(I18n.get("alert.missingFolder"));
             alert.setHeaderText(null);
-            alert.setContentText("Veuillez choisir un dossier source contenant les photos à filtrer.");
+            alert.setContentText(I18n.get("alert.selectSourceDir"));
             alert.showAndWait();
             return;
         }
@@ -491,9 +494,9 @@ public class PhotoFilterController implements Initializable {
             start.setDisable(false);
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-            alert.setTitle("Terminé");
+            alert.setTitle(I18n.get("alert.done"));
             alert.setHeaderText(null);
-            alert.setContentText("La compression est terminée !");
+            alert.setContentText(I18n.get("alert.compressionDone"));
             alert.showAndWait();
             resetProgressBarDelayed();
         });
@@ -506,9 +509,9 @@ public class PhotoFilterController implements Initializable {
             exception.printStackTrace();
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-            alert.setTitle("Erreur");
+            alert.setTitle(I18n.get("alert.error"));
             alert.setHeaderText(null);
-            alert.setContentText("Une erreur s'est produite lors de la compression : " + exception.getMessage());
+            alert.setContentText(I18n.get("alert.compressionError") + exception.getMessage());
             alert.showAndWait();
         });
 

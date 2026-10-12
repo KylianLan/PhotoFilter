@@ -28,9 +28,12 @@ public class PhotoFilterApplication extends Application {
 
     private void showMainApp(Stage stage) {
         try {
-            FXMLLoader fxmlLoader = new FXMLLoader(PhotoFilterApplication.class.getResource("PhotoFilter.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(
+                    PhotoFilterApplication.class.getResource("PhotoFilter.fxml"),
+                    I18n.getBundle()
+            );
             Parent root = fxmlLoader.load();
-            
+
             PhotoFilterController controller = fxmlLoader.getController();
             controller.setHostServices(getHostServices());
             
