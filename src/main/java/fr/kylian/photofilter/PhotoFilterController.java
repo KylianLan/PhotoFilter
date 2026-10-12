@@ -41,7 +41,6 @@ public class PhotoFilterController implements Initializable {
     @FXML private ProgressBar progressBar;
     @FXML private TextArea enabledFilters;
     @FXML private MenuItem help;
-    @FXML private MenuItem about;
 
     private static HostServices hostServices;
     private ObservableList<Filter> filters;
@@ -86,23 +85,13 @@ public class PhotoFilterController implements Initializable {
         } else {
             // Fallback default filters
             FilterMode[] dayAndMonth = new FilterMode[]{FilterMode.DAY, FilterMode.MONTH};
-            filters.add(new Filter("Réveillon de Noël", LocalDate.of(0, 12, 24), dayAndMonth));
-            filters.add(new Filter("Noël", LocalDate.of(0, 12, 25), dayAndMonth));
-            filters.add(new Filter("Veille du jour de l'an", LocalDate.of(0, 12, 31), dayAndMonth));
-            filters.add(new Filter("Jour de l'an", LocalDate.of(0, 1, 1), dayAndMonth));
+            filters.add(new Filter(I18n.get("filters.christmasEve"), LocalDate.of(0, 12, 24), dayAndMonth));
+            filters.add(new Filter(I18n.get("filters.christmas"), LocalDate.of(0, 12, 25), dayAndMonth));
+            filters.add(new Filter(I18n.get("filters.newYearsEve"), LocalDate.of(0, 12, 31), dayAndMonth));
+            filters.add(new Filter(I18n.get("filters.newYear"), LocalDate.of(0, 1, 1), dayAndMonth));
         }
 
         updateEnabledFiltersTextArea();
-
-        about.setOnAction(e -> {
-            Alert dialog = new Alert(Alert.AlertType.INFORMATION);
-            dialog.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-            dialog.setTitle("À propos");
-            dialog.setHeaderText("Copyright");
-            dialog.setContentText("© 2026 Kylian Langlois.\nTous droits réservés.");
-
-            dialog.showAndWait();
-        });
 
         help.setOnAction(e -> {
             this.openDoc();
@@ -146,7 +135,7 @@ public class PhotoFilterController implements Initializable {
 
     private boolean processSelectedInput(File input) {
         if (input == null || !input.exists()) {
-            this.selectedFolder.setText("Aucun dossier sélectionné");
+            this.selectedFolder.setText(I18n.get("noSelectedArchive"));
             this.folder = null;
             return false;
         }
@@ -166,7 +155,7 @@ public class PhotoFilterController implements Initializable {
 
             folderSelect.setDisable(true);
             start.setDisable(true);
-            selectedFolder.setText("Décompression de " + input.getName() + " en cours...");
+            selectedFolder.setText(I18n.get("extraction") + input.getName() + I18n.get("enCours"));
             progressBar.setProgress(0.0);
 
             javafx.concurrent.Task<Void> decompressTask = new javafx.concurrent.Task<Void>() {
@@ -193,13 +182,13 @@ public class PhotoFilterController implements Initializable {
                 folderSelect.setDisable(false);
                 start.setDisable(false);
                 this.folder = extractDir;
-                selectedFolder.setText("Archive extraite dans :\n" + extractDir.getAbsolutePath());
+                selectedFolder.setText(I18n.get("extraction.extractedArchive") + "\n" + extractDir.getAbsolutePath());
 
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-                alert.setTitle("Extraction terminée");
+                alert.setTitle(I18n.get("extraction.done"));
                 alert.setHeaderText(null);
-                alert.setContentText("L'archive '" + input.getName() + "' a été décompressée avec succès !");
+                alert.setContentText(I18n.get("extraction.archive") + input.getName() + I18n.get("extraction.successful"));
                 alert.showAndWait();
 
                 resetProgressBarDelayed();
@@ -214,11 +203,11 @@ public class PhotoFilterController implements Initializable {
                 ex.printStackTrace();
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-                alert.setTitle("Erreur de décompression");
+                alert.setTitle(I18n.get("extraction.error"));
                 alert.setHeaderText(null);
-                alert.setContentText("Impossible d'extraire l'archive : " + ex.getMessage());
+                alert.setContentText(I18n.get("extraction.impossible") + ex.getMessage());
                 alert.showAndWait();
-                selectedFolder.setText("Erreur d'extraction d'archive");
+                selectedFolder.setText(I18n.get("extraction.error"));
                 this.folder = null;
             });
 
@@ -228,7 +217,7 @@ public class PhotoFilterController implements Initializable {
             thread.start();
             return true;
         } else {
-            this.selectedFolder.setText("Fichier non supporté (sélectionnez un dossier ou une archive)");
+            this.selectedFolder.setText(I18n.get("unsupportedFile"));
             this.folder = null;
             start.setDisable(true);
             return false;
@@ -239,7 +228,7 @@ public class PhotoFilterController implements Initializable {
     void selectFolderOnly(ActionEvent event) {
         Stage stage = (Stage) folderSelect.getScene().getWindow();
         DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setTitle("Choisir un dossier d'images");
+        directoryChooser.setTitle(I18n.get("selectImagesFolder"));
 
         File initialFolder = new File(System.getProperty("user.home"));
         if (initialFolder.exists()) {
@@ -255,10 +244,10 @@ public class PhotoFilterController implements Initializable {
     void selectArchiveOnly(ActionEvent event) {
         Stage stage = (Stage) folderSelect.getScene().getWindow();
         javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
-        fileChooser.setTitle("Choisir une archive (.zip, .7z, .rar, .tar.gz, .tgz)");
+        fileChooser.setTitle(I18n.get("selectArchive")); // (.zip, .7z, .rar, .tar.gz, .tgz)
         fileChooser.getExtensionFilters().addAll(
-            new javafx.stage.FileChooser.ExtensionFilter("Archives supportées", "*.zip", "*.7z", "*.rar", "*.tar.gz", "*.tgz"),
-            new javafx.stage.FileChooser.ExtensionFilter("Tous les fichiers", "*.*")
+            new javafx.stage.FileChooser.ExtensionFilter(I18n.get("supportedArchives"), "*.zip", "*.7z", "*.rar", "*.tar.gz", "*.tgz"),
+            new javafx.stage.FileChooser.ExtensionFilter(I18n.get("everyFiles"), "*.*")
         );
 
         File initialFolder = new File(System.getProperty("user.home"));
@@ -435,7 +424,7 @@ public class PhotoFilterController implements Initializable {
 
         File initialDestination = new File(System.getProperty("user.home"));
         DirectoryChooser destSelection = new DirectoryChooser();
-        destSelection.setTitle("Choisir une destination");
+        destSelection.setTitle(I18n.get("chooseDir"));
         destSelection.setInitialDirectory(initialDestination);
 
         File destination = destSelection.showDialog(stage);
