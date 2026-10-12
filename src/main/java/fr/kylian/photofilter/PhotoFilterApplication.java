@@ -17,12 +17,8 @@ public class PhotoFilterApplication extends Application {
 
     @Override
     public void start(Stage stage) {
-        // Empêche JavaFX de se fermer automatiquement lorsque le dialogue de licence se ferme
-        // (avant que la fenêtre principale ne soit affichée)
         Platform.setImplicitExit(false);
-        
-        // On lance le flux asynchrone de vérification de licence.
-        // L'interface principale ne s'affichera que si la licence est valide.
+
         showMainApp(stage);
     }
 
@@ -51,9 +47,9 @@ public class PhotoFilterApplication extends Application {
                 if (controller != null && controller.isTaskRunning()) {
                     Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
                     confirmAlert.getDialogPane().getStylesheets().add(PhotoFilterApplication.class.getResource("style.css").toExternalForm());
-                    confirmAlert.setTitle("Opération en cours");
-                    confirmAlert.setHeaderText("Un traitement est actuellement en cours.");
-                    confirmAlert.setContentText("Voulez-vous vraiment annuler l'opération et quitter PhotoFilter ?");
+                    confirmAlert.setTitle(I18n.get("pendingOperation"));
+                    confirmAlert.setHeaderText(I18n.get("traitement en cours"));
+                    confirmAlert.setContentText(I18n.get("quitConfirmation"));
 
                     Optional<javafx.scene.control.ButtonType> result = confirmAlert.showAndWait();
                     if (result.isPresent() && result.get() == javafx.scene.control.ButtonType.OK) {
@@ -82,7 +78,7 @@ public class PhotoFilterApplication extends Application {
             Platform.setImplicitExit(true);
         } catch (IOException e) {
             e.printStackTrace();
-            showError("Erreur lors du chargement de l'interface principale.");
+            showError(I18n.get("alert.error"));
             Platform.exit();
         }
     }
@@ -90,7 +86,7 @@ public class PhotoFilterApplication extends Application {
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.getDialogPane().getStylesheets().add(PhotoFilterApplication.class.getResource("style.css").toExternalForm());
-        alert.setTitle("Erreur de licence");
+        alert.setTitle(I18n.get("alert.error"));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
